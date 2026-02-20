@@ -1,5 +1,6 @@
 Smart Resume Screening & Interview Preparation Assistant
 Humane, LLM-Powered Decision-Support System for Recruiters
+
 📌 Overview
 
 The Smart Resume Screening & Interview Preparation Assistant is a modular, LLM-driven web application designed to support recruiters in making transparent, explainable, and humane hiring decisions.
