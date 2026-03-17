@@ -167,6 +167,7 @@ Load testing and scaling strategy
 Frontend:
 
 React
+*Original project design created via Figma. 
 
 Backend:
 
