@@ -1,212 +1,189 @@
-🧠 AI-Powered Resume Screening & Ranking System
+🧠 Smart Resume Screening & Interview Preparation Assistant
 
-An intelligent resume analysis and candidate ranking platform that leverages Large Language Models (LLMs) for structured parsing, semantic comparison, scoring, explainable candidate evaluation, and generating interview questions.
+Capstone Project | Kennesaw State University | Group P12
 
-This system is designed to demonstrate modern AI system architecture, scalable processing, and clean separation between AI intelligence and deterministic business logic.
+An AI-powered decision-support system designed to improve consistency, transparency, and structure in early-stage candidate evaluation.
+
+This repository contains the full lifecycle of the project across all milestones, including planning, architecture, implementation, testing, and final delivery.
 
 🚀 Project Overview
 
-This application allows recruiters to:
+The Smart Resume Screening & Interview Preparation Assistant is a web-based system that enables recruiters to:
 
-Upload resumes (PDF, DOCX, JSON)
+Upload resumes (PDF, DOCX)
 
 Input job descriptions
 
-Automatically parse resumes into structured JSON
+Perform semantic (embedding-based) candidate evaluation
 
-Perform semantic comparison between resumes and job requirements
+Rank candidates across:
 
-Generate category-level scores
+Skills
 
-Apply weighted ranking rules
+Experience
 
-Receive explainable candidate evaluations
+Education
 
-Generate tailored interview questions
+Projects
 
-View ranked candidates in a dynamic dashboard
+Generate:
 
-The system is architected to support scalable processing and clean modular design.
+Explainable ranking insights
 
-🏗 System Architecture
+Tailored interview questions
 
-The system follows a layered architecture:
+Unlike traditional systems, this solution uses semantic similarity instead of keyword matching, improving alignment and fairness.
 
-1️⃣ Presentation Layer (React UI)
+Based on Milestone 1 planning and system design
 
-Resume upload interface
 
-Job description input
+🧩 Capstone Scope (All Milestones)
 
-Ranked candidate dashboard
+This repository tracks the entire capstone progression, not just the final product.
 
-AI-generated explanations and interview questions
+✅ Milestone 1 — Planning & Design (Completed)
 
-2️⃣ API / Application Layer
+Functional and non-functional requirements
 
-Request handling
+UX wireframes and recruiter dashboard design
 
-Authentication & authorization
+System architecture and data model
 
-Input validation
+Tech stack selection
 
-Routing to backend services
+GitHub repository setup
 
-3️⃣ Resume Ingestion Module
+Gantt chart creation
 
-PDF upload handling
+🔄 Milestone 2 — Core Development (In Progress)
 
-Text extraction
+Resume ingestion and parsing pipeline
 
-Text preprocessing and normalization
+Semantic matching (embeddings)
 
-4️⃣ LLM Processing Engine
-
-Structured resume parsing (JSON output)
-
-Semantic comparison with job description
-
-Category-level scoring
-
-Plain-language explanation generation
+Candidate ranking algorithm
 
 Interview question generation
 
-5️⃣ Business Logic Layer
+End-to-end system integration
 
-Weighted score calculation
+Mid-semester demonstration
 
-Deterministic final ranking
+⚙️ Execution Phase (Testing & Refinement)
 
-Configuration management (adjustable scoring weights)
+Bias mitigation testing
 
-6️⃣ Data Access Layer
+Explainability validation
 
-Database abstraction
+Performance optimization
 
-Query handling
+UI refinement
 
-Validation enforcement
+🎯 Final Phase (Delivery) and Milestone 2
 
-7️⃣ Database Layer (MongoDB)
+Final documentation
 
-Structured resume JSON
+Repository cleanup
 
-Category scores
+Final demonstration and submission
 
-Final rankings
+Timeline and task ownership are defined in the Gantt Chart
 
-Explanations
 
-Interview questions
+🏗 System Architecture
 
-System configuration settings
+The system follows a modular, layered architecture:
 
-⚙️ Scalability Design
+Frontend (React): User interaction and recruiter dashboard
 
-The system supports scalable processing through:
+Backend (Python API): Processing and orchestration
 
-Asynchronous request handling
+LLM Layer: Resume parsing, semantic analysis, explanations, and interview generation
 
-Message queue integration (for load control)
+Business Logic Layer: Deterministic ranking and scoring
 
-Worker-based LLM processing
+Database (MongoDB): Structured candidate data storage
 
-Horizontal scaling capability
+This design ensures scalability, modularity, and clear separation of concerns.
 
-Configurable load testing approach
+🧠 Key Features
 
-Initial testing begins with 20 resumes and scales incrementally to determine performance thresholds and identify bottlenecks.
+AI-driven resume parsing into structured JSON
 
-🧠 Architectural Philosophy
+Embedding-based semantic similarity (not keyword matching)
 
-This system enforces strict separation of concerns:
+Category-level scoring (skills, experience, education, projects)
 
-LLM Layer → Generates intelligence (parsing, semantic analysis, explanations)
-
-Business Logic Layer → Applies deterministic rules (weighted ranking, sorting)
-
-Data Layer → Handles persistence
-
-UI Layer → Handles interaction only
-
-This ensures:
-
-Auditability
-
-Reproducibility
-
-Configurability
-
-Model replaceability
-
-Enterprise-ready structure
-
-📊 Key Features
-
-AI-driven structured resume parsing
-
-Semantic similarity analysis
-
-Configurable weighted ranking
-
-Deterministic scoring governance
+Configurable weighted ranking system
 
 Explainable AI outputs
 
 Interview question generation
 
-Modular, scalable architecture
+Recruiter dashboard interface
 
-MongoDB document-based storage
+Modular and scalable architecture
 
-Load testing and scaling strategy
+⚙️ Tech Stack
 
-🛠 Tech Stack
-
-Frontend:
+Frontend
 
 React
-*Original project design created via Figma. 
 
-Backend:
+Backend
 
-Python (API & business logic)
+Python (API and business logic)
 
-LLM integration
+AI / ML
 
-Resume parsing utilities
+LLaMA 3.1 8B (primary LLM)
 
-Database:
+Sentence Transformers (semantic embeddings)
+
+Database
 
 MongoDB
 
-Processing:
+Deployment Strategy
 
-LLM-based semantic modeling
+Hugging Face API (primary)
 
-Optional message queue for scalable processing
+Local model fallback (LLaMA 3.2 3B if needed)
 
-📈 Future Enhancements
+📈 Scalability & Design Considerations
 
-TBD
+Asynchronous processing for handling multiple resumes
 
-🎯 Why This Project?
+Modular components for model replacement
 
-This project demonstrates:
+Separation of AI outputs from deterministic ranking logic
 
-End-to-end AI system design
+Designed for incremental scaling and testing
 
-Scalable architecture planning
+Initial testing begins with small batches and scales to identify performance thresholds.
 
-Clean separation of AI and business logic
+⚠️ Assumptions and Constraints
 
-Deterministic governance over probabilistic models
+The system is a decision-support tool, not an automated hiring system
 
-Production-oriented thinking
+No candidates are automatically rejected or filtered out
 
-It reflects real-world considerations for deploying AI systems responsibly in hiring workflows.
+Protected demographic attributes are not used or inferred
+
+Operates within academic prototype constraints
+
+🔮 Future Enhancements
+
+Expanded evaluation metrics and scoring customization
+
+Improved UI/UX for recruiter workflows
+
+Integration with external HR systems
+
+Advanced bias detection and fairness auditing
+
+Real-time processing optimization
 
 📌 Disclaimer
 
-This system is designed as a technical demonstration of AI-assisted screening. It is not intended to fully replace human hiring decisions.
+This system is intended for academic and demonstration purposes. It is not designed to replace human decision-making in hiring processes.
