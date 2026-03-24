@@ -8,6 +8,7 @@ import tempfile
 import os
 
 from llm_scoring import score_resume_with_llama
+from interview_questions import build_candidate_question_inputs, generate_questions
 
 app = FastAPI()
 
@@ -68,9 +69,84 @@ def get_current_job():
 
 @app.get("/api/jobs/current/candidates")
 def get_candidates():
+    sorted_candidates = sorted(
+        candidate_results,
+        key=lambda candidate: candidate.get("final_score", 0),
+        reverse=True
+    )
+
+    formatted_candidates = []
+
+    for index, candidate in enumerate(sorted_candidates, start=1):
+        strengths = candidate.get("strengths", [])
+        gaps = candidate.get("gaps", [])
+
+        formatted_candidates.append({
+            "id": str(index),
+            "rank": index,
+            "name": candidate.get("candidate_name", f"Candidate {index}"),
+            "score": f'{candidate.get("final_score", 0)}%',
+            "skills": ", ".join(strengths[:3]),
+            "gaps": ", ".join(gaps[:3]),
+        })
 
     return {
-        "candidates": candidate_results
+        "candidates": formatted_candidates
+    }
+
+
+@app.get("/api/candidates/{candidate_id}")
+def get_candidate(candidate_id: str):
+    try:
+        candidate_index = int(candidate_id) - 1
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail="Candidate not found.") from exc
+
+    if candidate_index < 0 or candidate_index >= len(candidate_results):
+        raise HTTPException(status_code=404, detail="Candidate not found.")
+
+    candidate = candidate_results[candidate_index]
+
+    return {
+        "candidate": {
+            "id": candidate_id,
+            "candidate_name": candidate.get("candidate_name", f"Candidate {candidate_id}"),
+            "strengths": candidate.get("strengths", []),
+            "gaps": candidate.get("gaps", []),
+        }
+    }
+
+
+@app.post("/api/candidates/{candidate_id}/interview-questions")
+def create_interview_questions(candidate_id: str):
+    if not current_job_description:
+        raise HTTPException(status_code=400, detail="Upload a job description first.")
+
+    try:
+        candidate_index = int(candidate_id) - 1
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail="Candidate not found.") from exc
+
+    if candidate_index < 0 or candidate_index >= len(candidate_results):
+        raise HTTPException(status_code=404, detail="Candidate not found.")
+
+    candidate = candidate_results[candidate_index]
+
+    try:
+        prompt_inputs = build_candidate_question_inputs(candidate, current_job_description)
+        questions = generate_questions(**prompt_inputs)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to generate interview questions."
+        ) from exc
+
+    return {
+        "candidate_id": candidate_id,
+        "candidate_name": candidate.get("candidate_name", f"Candidate {candidate_id}"),
+        "questions": questions,
     }
 
 # -------------------------

@@ -88,7 +88,7 @@ def score_resume_with_llama(job_description: str, resume_text: str):
                 "temperature": 0.1
             }
         },
-        timeout=120
+        timeout=300
     )
 
     response.raise_for_status()
