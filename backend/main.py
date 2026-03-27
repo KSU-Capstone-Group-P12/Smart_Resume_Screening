@@ -1,4 +1,6 @@
 # Run with: uvicorn main:app --reload
+from db import resumes_collection, candidates_collection
+from datetime import datetime, timezone
 
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -48,9 +50,18 @@ def health_check():
 
 @app.post("/api/jobs/upload")
 async def upload_job_description(job_text: str):
-
     global current_job_description
-    current_job_description = job_text
+    global current_job_description
+    global candidate_results
+
+    if not job_text or not job_text.strip():
+        raise HTTPException(
+            status_code=400,
+            detail="Job description cannot be empty."
+        )
+
+    current_job_description = job_text.strip()
+    candidate_results = []
 
     return {
         "message": "Job description uploaded successfully"
@@ -226,9 +237,12 @@ async def upload_resume(file: UploadFile = File(...)):
             job_description=current_job_description,
             resume_text=extracted_text
         )
+        
 
         result = {
             "candidate_name": candidate_name,
+            "resume_text": extracted_text,
+            "job_description": current_job_description,
             "section_scores": {
                 "skills": llm_result["skills_score"],
                 "experience": llm_result["experience_score"],
