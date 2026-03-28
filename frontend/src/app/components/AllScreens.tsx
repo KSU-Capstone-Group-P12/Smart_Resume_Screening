@@ -81,7 +81,7 @@ export function AllScreens() {
           {/* Screen 4 */}
           <div
             className="bg-[#3a3a3a] border-2 border-[#4a4a4a] rounded-lg p-6 cursor-pointer hover:border-[#6a6a6a] transition-all"
-            onClick={() => navigate("/candidate/2")}
+            onClick={() => navigate("/ranking")}
           >
             <h3 className="text-white font-bold mb-4 text-sm">
               SCREEN 4: CANDIDATE DETAIL VIEW
@@ -104,7 +104,7 @@ export function AllScreens() {
           {/* Screen 5 */}
           <div
             className="bg-[#3a3a3a] border-2 border-[#4a4a4a] rounded-lg p-6 cursor-pointer hover:border-[#6a6a6a] transition-all lg:col-span-2"
-            onClick={() => navigate("/interview/2")}
+            onClick={() => navigate("/ranking")}
           >
             <h3 className="text-white font-bold mb-4 text-sm">
               SCREEN 5: INTERVIEW QUESTIONS + ETHICAL FRAMEWORK

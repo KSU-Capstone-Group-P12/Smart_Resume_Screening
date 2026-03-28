@@ -43,6 +43,8 @@ Each score must be between 0 and 100.
 Then calculate a final_score between 0 and 100 based on the overall fit.
 
 Also provide:
+- candidate_name: the candidate's full name from the resume
+- summary: a 2-3 sentence recruiter-friendly summary of the candidate
 - strengths: a short list of 2-4 strengths
 - gaps: a short list of 2-4 missing or weaker areas
 
@@ -63,6 +65,8 @@ Do not include explanation outside JSON.
 Use exactly this format:
 
 {{
+  "candidate_name": "",
+  "summary": "",
   "skills_score": 0,
   "experience_score": 0,
   "education_score": 0,
@@ -98,6 +102,8 @@ def score_resume_with_llama(job_description: str, resume_text: str):
     parsed = extract_json_from_response(raw_output)
 
     result = {
+        "candidate_name": str(parsed.get("candidate_name", "")).strip(),
+        "summary": str(parsed.get("summary", "")).strip(),
         "skills_score": parsed.get("skills_score", 0),
         "experience_score": parsed.get("experience_score", 0),
         "education_score": parsed.get("education_score", 0),

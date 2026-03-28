@@ -14,3 +14,4 @@ db = client["smart_resume"]
 #More to follow as development continues.
 resumes_collection = db["resumes"]
 candidates_collection = db["candidates"]
+interview_questions_collection = db["interview_questions"]

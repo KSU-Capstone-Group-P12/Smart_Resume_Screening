@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Progress } from "./ui/progress";
+import { useLocation, useNavigate } from "react-router";
 import { CheckCircle2, Loader2, ArrowLeft, Square } from "lucide-react";
 import { WireframeLayout } from "./WireframeLayout";
 import { Button } from "./ui/button";
@@ -11,65 +9,94 @@ type Step = {
   status: "pending" | "processing" | "complete";
 };
 
+const API_BASE = "http://127.0.0.1:8000";
+
 export function Processing() {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const uploadComplete = location.state?.uploadComplete ?? false;
+  const uploadedCount = location.state?.uploadedCount ?? 0;
+
   const [steps, setSteps] = useState<Step[]>([
-    { label: "Parsing Resumes", status: "pending" },
-    { label: "Generating Embeddings", status: "pending" },
-    { label: "Computing Similarity Scores", status: "pending" },
-    { label: "Generating Ranking Explanations", status: "pending" },
-    { label: "Preparing Interview Questions", status: "pending" },
+    { label: "Upload Complete", status: uploadComplete ? "complete" : "pending" },
+    { label: "Parsing Resumes", status: "processing" },
+    { label: "Scoring Candidates", status: "pending" },
+    { label: "Preparing Ranking Results", status: "pending" },
   ]);
-  const [currentStep, setCurrentStep] = useState(0);
-  const [progress, setProgress] = useState(0);
+
+  const [statusMessage, setStatusMessage] = useState(
+    uploadComplete
+      ? `Upload successful. ${uploadedCount} file(s) submitted. Finalizing candidate analysis...`
+      : "Preparing candidate analysis..."
+  );
 
   useEffect(() => {
-    const stepDuration = 3000; // 3 seconds per step
-    const progressInterval = 100; // Update progress every 100ms
+  let cancelled = false;
 
-    const progressTimer = setInterval(() => {
-      setProgress((prev) => {
-        const increment = (100 / stepDuration) * progressInterval;
-        const newProgress = prev + increment;
-        return newProgress >= 100 ? 100 : newProgress;
-      });
-    }, progressInterval);
-
-    const stepTimer = setInterval(() => {
-      setCurrentStep((prev) => {
-        if (prev < steps.length) {
-          setSteps((prevSteps) =>
-            prevSteps.map((step, idx) => {
-              if (idx < prev) return { ...step, status: "complete" };
-              if (idx === prev) return { ...step, status: "processing" };
-              return step;
-            })
-          );
-          setProgress(0);
-          return prev + 1;
-        }
-        return prev;
-      });
-    }, stepDuration);
-
-    const completeTimer = setTimeout(() => {
-      setSteps((prevSteps) =>
-        prevSteps.map((step) => ({ ...step, status: "complete" }))
+  const runProcessingCheck = async () => {
+    try {
+      // Step 1
+      setSteps((prev) =>
+        prev.map((step, idx) =>
+          idx === 1 ? { ...step, status: "processing" } : step
+        )
       );
-      setTimeout(() => {
+
+      await new Promise((resolve) => setTimeout(resolve, 1200));
+
+      // Step 2
+      setSteps((prev) =>
+        prev.map((step, idx) => {
+          if (idx === 1) return { ...step, status: "complete" };
+          if (idx === 2) return { ...step, status: "processing" };
+          return step;
+        })
+      );
+
+      setStatusMessage("Checking candidate scoring results...");
+
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      const response = await fetch(`${API_BASE}/api/jobs/current/candidates`);
+      const data = await response.json();
+
+      if (cancelled) return;
+
+      const candidates = data.candidates || [];
+
+      if (candidates.length > 0) {
+        setSteps((prev) =>
+          prev.map((step, idx) => {
+            if (idx === 2) return { ...step, status: "complete" };
+            if (idx === 3) return { ...step, status: "processing" };
+            return step;
+          })
+        );
+
+        setStatusMessage("Candidates processed successfully. Preparing dashboard...");
+
+        await new Promise((resolve) => setTimeout(resolve, 1200));
+
+        if (cancelled) return;
+
+        setSteps((prev) => prev.map((step) => ({ ...step, status: "complete" })));
         navigate("/ranking");
-      }, 1000);
-    }, stepDuration * steps.length);
+      } else {
+        setStatusMessage("No candidates found yet. Please try again.");
+      }
+    } catch (error) {
+      console.error("Processing check failed:", error);
+      setStatusMessage("Processing failed. Please return and try again.");
+    }
+  };
 
-    return () => {
-      clearInterval(progressTimer);
-      clearInterval(stepTimer);
-      clearTimeout(completeTimer);
-    };
-  }, [navigate, steps.length]);
+  runProcessingCheck();
 
-  const completedSteps = steps.filter((s) => s.status === "complete").length;
-  const overallProgress = (completedSteps / steps.length) * 100;
+  return () => {
+    cancelled = true;
+  };
+}, [navigate]);
 
   return (
     <WireframeLayout title="SCREEN 2: PROCESSING...">
@@ -88,7 +115,9 @@ export function Processing() {
           <h2 className="text-white text-xl font-bold mb-8 text-center">
             Processing Candidates...
           </h2>
-
+          <p className="text-center text-gray-400 text-sm mb-6">
+            {statusMessage}
+          </p>
           <div className="space-y-4 mb-8">
             {steps.map((step, idx) => (
               <div key={idx} className="flex items-center gap-3">
@@ -115,7 +144,7 @@ export function Processing() {
           </div>
 
           <div className="text-center text-gray-400 text-xs">
-            Estimated Time: &lt; 30 seconds
+             This may take a few moments depending on resume length and model speed.
           </div>
         </div>
       </div>

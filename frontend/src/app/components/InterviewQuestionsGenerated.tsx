@@ -73,12 +73,36 @@ export function InterviewQuestionsGenerated() {
   useEffect(() => {
     loadCandidate();
   }, [id]);
-
-  useEffect(() => {
-    if (id) {
-      generateInterviewQuestions();
+  const loadSavedInterviewQuestions = async () => {
+    if (!id) return false;
+    try {
+      const response = await fetch(`${API_BASE}/api/candidates/${id}/interview-questions`);
+      const data = await response.json();
+      
+      if (!response.ok) {
+      return false;
     }
-  }, [id]);
+
+    const raw = data.raw_questions || "";
+    setRawQuestions(raw);
+    setQuestions(Array.isArray(data.questions) ? data.questions : parseQuestions(raw));
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+useEffect(() => {
+  const init = async () => {
+    if (!id) return;
+    const found = await loadSavedInterviewQuestions();
+    if (!found) {
+      await generateInterviewQuestions();
+    }
+  };
+
+  init();
+}, [id]);
 
   return (
     <WireframeLayout title="SCREEN 5: INTERVIEW QUESTIONS">
@@ -86,7 +110,7 @@ export function InterviewQuestionsGenerated() {
         <div className="flex items-center justify-between gap-4">
           <Button
             variant="ghost"
-            onClick={() => navigate(-1)}
+            onClick={() => navigate(`/candidate/${id}`)}
             className="text-gray-300 hover:text-white text-xs"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />

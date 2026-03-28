@@ -55,7 +55,7 @@ export function CandidateRanking() {
               Job
             </div>
             <div className="bg-[#5a5a5a] border border-[#6a6a6a] px-3 py-1 rounded text-white text-xs">
-              Data Analyst
+              {jobTitle}
             </div>
             <div className="bg-[#5a5a5a] border border-[#6a6a6a] px-3 py-1 rounded text-white text-xs">
               Upload More
@@ -85,8 +85,7 @@ export function CandidateRanking() {
                   <th className="text-left text-gray-300 p-2 font-normal">Rank</th>
                   <th className="text-left text-gray-300 p-2 font-normal">Name</th>
                   <th className="text-left text-gray-300 p-2 font-normal">Score</th>
-                  <th className="text-left text-gray-300 p-2 font-normal">Skills</th>
-                  <th className="text-left text-gray-300 p-2 font-normal">Skills</th>
+                  <th className="text-left text-gray-300 p-2 font-normal">Strengths</th>
                   <th className="text-left text-gray-300 p-2 font-normal">Gaps</th>
                   <th className="text-left text-gray-300 p-2 font-normal">View</th>
                 </tr>
@@ -104,7 +103,6 @@ export function CandidateRanking() {
                     <td className="text-gray-300 p-2">{candidate.name}</td>
                     <td className="text-gray-300 p-2">{candidate.score}</td>
                     <td className="text-gray-300 p-2">{candidate.skills}</td>
-                    <td className="text-gray-300 p-2"></td>
                     <td className="text-gray-300 p-2">{candidate.gaps}</td>
                     <td className="text-gray-300 p-2">
                       <Button
@@ -125,35 +123,6 @@ export function CandidateRanking() {
             </table>
           </div>
         </div>
-
-        {/* Explainable Ranking Panel */}
-        {selectedId === "2" && (
-          <div className="bg-[#4a4a4a] border border-[#5a5a5a] rounded p-4">
-            <h2 className="text-white font-bold mb-4 text-sm tracking-wide">
-              Explainable Ranking Panel
-            </h2>
-            <div className="space-y-3">
-              <div className="flex gap-2 text-xs">
-                <span className="text-gray-400">Skills Match:</span>
-                <span className="text-gray-300">High</span>
-              </div>
-              <div className="flex gap-2 text-xs">
-                <span className="text-gray-400">Experience Match:</span>
-                <span className="text-gray-300">Moderate</span>
-              </div>
-              <div className="flex gap-2 text-xs">
-                <span className="text-gray-400">Education Match:</span>
-                <span className="text-gray-300">High</span>
-              </div>
-              <div className="border-t border-[#5a5a5a] pt-3 mt-3">
-                <p className="text-gray-400 text-[10px] mb-1">Plain Language Explanation:</p>
-                <p className="text-gray-300 text-[10px] leading-relaxed">
-                  Candidate ranked based on ranked_detailed_analysis. Plain Language Explanation.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </WireframeLayout>
   );

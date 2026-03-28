@@ -17,7 +17,8 @@ export function JobUpload() {
     "We are seeking a Data Analyst with experience in Python, SQL, and statistical analysis..."
   );
 
-  const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
+const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
 
   const [filters, setFilters] = useState({
     scoreRange: false,
@@ -28,11 +29,11 @@ export function JobUpload() {
 
   const uploadJobDescription = async () => {
     const response = await fetch(
-      `${API_BASE}/api/jobs/upload?job_text=${encodeURIComponent(jobDescription)}`,
-      {
-        method: "POST",
-      }
-    );
+  `${API_BASE}/api/jobs/upload?job_title=${encodeURIComponent(jobTitle)}&job_text=${encodeURIComponent(jobDescription)}`,
+  {
+    method: "POST",
+  }
+);
 
     if (!response.ok) {
       throw new Error("Failed to upload the job description.");
@@ -40,53 +41,70 @@ export function JobUpload() {
   };
 
 // Send selected resume files to the FastAPI backend
-
-const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+const [isSubmitting, setIsSubmitting] = useState(false);
+const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
   if (!e.target.files) return;
 
   const files = Array.from(e.target.files);
+    setSelectedFiles((prev) => [...prev, ...files]);
+  };
 
-  try {
-    await uploadJobDescription();
-  } catch (error) {
-    console.error("Job description upload error:", error);
+  const removeFile = (fileName: string) => {
+  setSelectedFiles((prev) => prev.filter((file) => file.name !== fileName));
+  };
+
+const handleStartAnalysis = async () => {
+  if (isSubmitting) return;
+
+  if (!jobDescription.trim()) {
+    console.error("Job description is required.");
     return;
   }
 
-  for (const file of files) {
-    const formData = new FormData();
-    formData.append("file", file);
+  if (selectedFiles.length === 0) {
+    console.error("No files selected.");
+    return;
+  }
 
-    try {
+  try {
+    setIsSubmitting(true);
+
+    await uploadJobDescription();
+
+    const successfulUploads: string[] = [];
+
+    for (const file of selectedFiles) {
+      const formData = new FormData();
+      formData.append("file", file);
+
       const response = await fetch(`${API_BASE}/api/resumes/upload`, {
         method: "POST",
         body: formData,
       });
 
       if (!response.ok) {
-        throw new Error(`Upload failed for ${file.name}`);
+        const errorText = await response.text();
+        throw new Error(`Resume upload failed for ${file.name}: ${errorText}`);
       }
 
-      await response.json();
-      setUploadedFiles((prev) => [...prev, file.name]);
-    } catch (error) {
-      console.error("Upload error:", error);
+      const data = await response.json();
+      successfulUploads.push(data.candidate?.candidate_name || file.name);
     }
+
+    setUploadedFiles(successfulUploads);
+    setSelectedFiles([]);
+    navigate("/processing", {
+  state: {
+    uploadComplete: true,
+    uploadedCount: successfulUploads.length,
+  },
+});
+  } catch (error) {
+    console.error("Start analysis error:", error);
+  } finally {
+    setIsSubmitting(false);
   }
 };
-
-  const removeFile = (fileName: string) => {
-    setUploadedFiles(uploadedFiles.filter((f) => f !== fileName));
-  };
-
-  const handleStartAnalysis = async () => {
-    try {
-      await uploadJobDescription();
-      navigate("/processing");
-    } catch (error) {
-      console.error("Start analysis error:", error);
-    }
-  };
 
   return (
     <WireframeLayout title="SCREEN 1: JOB DESCRIPTION + UPLOAD">
@@ -102,6 +120,17 @@ const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         </Button>
 
         {/* Job Description Section */}
+
+        <div className="bg-[#4a4a4a] border border-[#5a5a5a] rounded p-4">
+          <h2 className="text-white font-bold mb-3 text-sm tracking-wide">JOB TITLE</h2>
+          <input
+          type="text"
+          value={jobTitle}
+          onChange={(e) => setJobTitle(e.target.value)}
+          placeholder="Enter job title here..."
+          className="w-full bg-[#5a5a5a] border border-[#6a6a6a] rounded px-3 py-2 text-gray-200 text-xs"
+          />
+        </div>
         <div className="bg-[#4a4a4a] border border-[#5a5a5a] rounded p-4">
           <h2 className="text-white font-bold mb-3 text-sm tracking-wide">JOB DESCRIPTION</h2>
           <Textarea
@@ -125,23 +154,27 @@ const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
               className="hidden"
             />
             <label htmlFor="file-upload" className="cursor-pointer block">
-              <div className="text-gray-400 text-xs mb-2">Drag & Drop PDFs Here</div>
+              <div className="text-gray-400 text-xs mb-2">Drag & Drop PDF or DOCX Files Here</div>
               <div className="text-gray-500 text-[10px]">- channel file path -</div>
             </label>
           </div>
-          <Button variant="outline" className="bg-[#5a5a5a] border-[#6a6a6a] text-white text-xs">
+          <Button   variant="outline"  
+            className="bg-[#5a5a5a] border-[#6a6a6a] text-white text-xs"
+            onClick={() => document.getElementById("file-upload")?.click()}
+            disabled={isSubmitting}
+          >
             Upload Button
           </Button>
-          {uploadedFiles.length > 0 && (
+{selectedFiles.length > 0 && (
   <div className="mt-4 space-y-2">
-    {uploadedFiles.map((fileName) => (
+    {selectedFiles.map((file) => (
       <div
-        key={fileName}
+        key={file.name}
         className="flex items-center justify-between bg-[#5a5a5a] border border-[#6a6a6a] rounded px-3 py-2"
       >
-        <span className="text-gray-200 text-xs">{fileName}</span>
+        <span className="text-gray-200 text-xs">{file.name}</span>
         <button
-          onClick={() => removeFile(fileName)}
+          onClick={() => removeFile(file.name)}
           className="text-gray-300 hover:text-white"
         >
           <X className="w-4 h-4" />
@@ -218,10 +251,11 @@ const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         {/* Start Button */}
         <div className="bg-[#5a5a5a] border border-[#6a6a6a] rounded p-3 text-center">
           <Button
-            onClick={handleStartAnalysis}
-            className="bg-[#6a6a6a] hover:bg-[#7a7a7a] text-white border border-[#8a8a8a] w-full"
+          onClick={handleStartAnalysis}
+          disabled={isSubmitting}
+          className="bg-[#6a6a6a] hover:bg-[#7a7a7a] text-white border border-[#8a8a8a] w-full disabled:opacity-50"
           >
-            Start Semantic Analysis
+            {isSubmitting ? "Processing..." : "Start Semantic Analysis"}
           </Button>
         </div>
 

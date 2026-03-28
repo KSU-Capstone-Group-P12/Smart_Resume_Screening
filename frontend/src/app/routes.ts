@@ -10,7 +10,7 @@ import { AllScreens } from "./components/AllScreens";
 export const router = createBrowserRouter([
   {
     path: "/",
-    Component: CandidateRanking,
+    Component: WireframeOverview,
   },
   {
     path: "/dashboard",

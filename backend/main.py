@@ -1,5 +1,5 @@
 # Run with: uvicorn main:app --reload
-from db import resumes_collection, candidates_collection
+from db import resumes_collection, candidates_collection, interview_questions_collection
 from datetime import datetime, timezone
 
 from fastapi import FastAPI, UploadFile, File, HTTPException
@@ -29,6 +29,7 @@ app.add_middleware(
 # In-memory storage
 # -------------------------
 
+current_job_title = ""
 current_job_description = ""
 candidate_results = []
 
@@ -49,8 +50,8 @@ def health_check():
 # -------------------------
 
 @app.post("/api/jobs/upload")
-async def upload_job_description(job_text: str):
-    global current_job_description
+async def upload_job_description(job_title: str = "", job_text: str = ""):
+    global current_job_title
     global current_job_description
     global candidate_results
 
@@ -60,31 +61,47 @@ async def upload_job_description(job_text: str):
             detail="Job description cannot be empty."
         )
 
+    current_job_title = job_title.strip() if job_title else "Untitled Role"
     current_job_description = job_text.strip()
     candidate_results = []
 
     return {
-        "message": "Job description uploaded successfully"
+        "job_title": current_job_title,
+        "job_description": current_job_description
     }
 
 @app.get("/api/jobs/current")
 def get_current_job():
-
     return {
+        "job_title": current_job_title,
         "job_description": current_job_description
     }
-
-# -------------------------
+# --------------------------
 # Candidate Dashboard
 # -------------------------
 
 @app.get("/api/jobs/current/candidates")
 def get_candidates():
+    candidate_docs = list(
+        candidates_collection.find(
+            {},
+            {
+                "_id": 0,
+                "candidate_name": 1,
+                "final_score": 1,
+                "strengths": 1,
+                "gaps": 1,
+                "processed_at": 1,
+            }
+        )
+    )
+
     sorted_candidates = sorted(
-        candidate_results,
+        candidate_docs,
         key=lambda candidate: candidate.get("final_score", 0),
         reverse=True
     )
+
 
     formatted_candidates = []
 
@@ -102,50 +119,125 @@ def get_candidates():
         })
 
     return {
+        "job_title": current_job_title,
         "candidates": formatted_candidates
     }
 
 
 @app.get("/api/candidates/{candidate_id}")
 def get_candidate(candidate_id: str):
+    candidate_docs = list(
+        candidates_collection.find(
+            {},
+            {
+                "_id": 0,
+                "candidate_name": 1,
+                "summary": 1,
+                "final_score": 1,
+                "strengths": 1,
+                "gaps": 1,
+                "resume_text": 1,
+                "section_scores": 1,
+                "job_description": 1,
+                "processed_at": 1,
+            }
+        )
+    )
+
+    sorted_candidates = sorted(
+        candidate_docs,
+        key=lambda candidate: candidate.get("final_score", 0),
+        reverse=True
+    )
+
     try:
         candidate_index = int(candidate_id) - 1
     except ValueError as exc:
         raise HTTPException(status_code=404, detail="Candidate not found.") from exc
 
-    if candidate_index < 0 or candidate_index >= len(candidate_results):
+    if candidate_index < 0 or candidate_index >= len(sorted_candidates):
         raise HTTPException(status_code=404, detail="Candidate not found.")
 
-    candidate = candidate_results[candidate_index]
+    candidate = sorted_candidates[candidate_index]
 
     return {
         "candidate": {
             "id": candidate_id,
             "candidate_name": candidate.get("candidate_name", f"Candidate {candidate_id}"),
+            "summary": candidate.get("summary", ""),
+            "score": f'{candidate.get("final_score", 0)}%',
             "strengths": candidate.get("strengths", []),
             "gaps": candidate.get("gaps", []),
+            "resume_text": candidate.get("resume_text", ""),
+            "section_scores": candidate.get("section_scores", {}),
+            "job_description": candidate.get("job_description", ""),
         }
     }
 
 
 @app.post("/api/candidates/{candidate_id}/interview-questions")
 def create_interview_questions(candidate_id: str):
-    if not current_job_description:
-        raise HTTPException(status_code=400, detail="Upload a job description first.")
+    candidate_docs = list(
+        candidates_collection.find(
+            {},
+            {
+                "_id": 0,
+                "candidate_name": 1,
+                "strengths": 1,
+                "gaps": 1,
+                "resume_text": 1,
+                "job_description": 1,
+                "final_score": 1,
+            }
+        )
+    )
+
+    sorted_candidates = sorted(
+        candidate_docs,
+        key=lambda candidate: candidate.get("final_score", 0),
+        reverse=True
+    )
 
     try:
         candidate_index = int(candidate_id) - 1
     except ValueError as exc:
         raise HTTPException(status_code=404, detail="Candidate not found.") from exc
 
-    if candidate_index < 0 or candidate_index >= len(candidate_results):
+    if candidate_index < 0 or candidate_index >= len(sorted_candidates):
         raise HTTPException(status_code=404, detail="Candidate not found.")
 
-    candidate = candidate_results[candidate_index]
+    candidate = sorted_candidates[candidate_index]
+
+    job_description_for_questions = current_job_description or candidate.get("job_description", "")
+    if not job_description_for_questions:
+        raise HTTPException(status_code=400, detail="No job description available for this candidate.")
 
     try:
-        prompt_inputs = build_candidate_question_inputs(candidate, current_job_description)
+        prompt_inputs = build_candidate_question_inputs(candidate, job_description_for_questions)
         questions = generate_questions(**prompt_inputs)
+
+        parsed_questions = [
+            line.strip()
+            for line in questions.splitlines()
+            if line.strip()
+        ]
+
+        interview_doc = {
+            "candidate_id": candidate_id,
+            "candidate_name": candidate.get("candidate_name", f"Candidate {candidate_id}"),
+            "job_title": current_job_title,
+            "job_description": job_description_for_questions,
+            "questions": parsed_questions,
+            "raw_questions": questions,
+            "generated_at": datetime.now(timezone.utc),
+        }
+
+        interview_questions_collection.update_one(
+            {"candidate_id": candidate_id},
+            {"$set": interview_doc},
+            upsert=True
+        )
+
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:
@@ -159,6 +251,18 @@ def create_interview_questions(candidate_id: str):
         "candidate_name": candidate.get("candidate_name", f"Candidate {candidate_id}"),
         "questions": questions,
     }
+
+@app.get("/api/candidates/{candidate_id}/interview-questions")
+def get_saved_interview_questions(candidate_id: str):
+    doc = interview_questions_collection.find_one(
+        {"candidate_id": candidate_id},
+        {"_id": 0}
+    )
+
+    if not doc:
+        raise HTTPException(status_code=404, detail="No saved interview questions found.")
+
+    return doc
 
 # -------------------------
 # File Parsing
@@ -230,17 +334,41 @@ async def upload_resume(file: UploadFile = File(...)):
                 status_code=400,
                 detail="No readable text found."
             )
+        
+        fallback_name = file.filename.replace(".pdf", "").replace(".docx", "")
+        
+        resume_doc = {
+            "candidate_name_raw": fallback_name,
+            "filename": file.filename,
+            "file_type": suffix.replace(".", ""),
+            "job_description": current_job_description,
+            "raw_text": extracted_text,
+            "parse_status": "uploaded",
+            "uploaded_at": datetime.now(timezone.utc),
+        }
 
-        candidate_name = file.filename.replace(".pdf", "").replace(".docx", "")
+        resume_insert = resumes_collection.insert_one(resume_doc)
 
         llm_result = score_resume_with_llama(
             job_description=current_job_description,
             resume_text=extracted_text
         )
         
+        candidate_name = (llm_result.get("candidate_name") or "").strip() or fallback_name
+
+        resumes_collection.update_one(
+             {"_id": resume_insert.inserted_id},
+             {
+                 "$set": {
+                     "candidate_name_extracted": candidate_name,
+                     "parse_status": "processed"
+                }
+            }
+        )
 
         result = {
             "candidate_name": candidate_name,
+            "summary": llm_result.get("summary", ""),
             "resume_text": extracted_text,
             "job_description": current_job_description,
             "section_scores": {
@@ -254,6 +382,22 @@ async def upload_resume(file: UploadFile = File(...)):
             "strengths": llm_result["strengths"],
             "gaps": llm_result["gaps"]
         }
+
+        candidate_doc = {
+            "resume_id": str(resume_insert.inserted_id),
+            "candidate_name": result["candidate_name"],
+            "summary": result["summary"],
+            "resume_text": result["resume_text"],
+            "job_description": result["job_description"],
+            "section_scores": result["section_scores"],
+            "final_score": result["final_score"],
+            "strengths": result["strengths"],
+            "gaps": result["gaps"],
+            "interview_questions": [],
+            "processed_at": datetime.now(timezone.utc),
+        }
+
+        candidates_collection.insert_one(candidate_doc)
 
         candidate_results.append(result)
 
