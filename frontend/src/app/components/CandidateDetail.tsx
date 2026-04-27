@@ -13,7 +13,42 @@ export function CandidateDetail() {
   const [notes, setNotes] = useState("");
   const [candidate, setCandidate] = useState<any>(null);
   const [error, setError] = useState("");
-  useEffect(() => {
+  const [isSavingNotes, setIsSavingNotes] = useState(false);
+  const [notesMessage, setNotesMessage] = useState("");
+
+ const handleSaveNotes = async () => {
+  if (!id) return;
+
+  try {
+    setIsSavingNotes(true);
+    setNotesMessage("");
+
+    const response = await fetch(`${API_BASE}/api/candidates/${id}/notes`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        recruiter_notes: notes,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.detail || "Failed to save recruiter notes.");
+    }
+
+    setNotesMessage("Notes saved.");
+  } catch (err) {
+    console.error("Failed to save notes:", err);
+    setNotesMessage("Failed to save notes.");
+  } finally {
+    setIsSavingNotes(false);
+  }
+};
+
+useEffect(() => {
   if (!id) return;
 
   fetch(`${API_BASE}/api/candidates/${id}`)
@@ -23,6 +58,7 @@ export function CandidateDetail() {
         throw new Error("Candidate not found.");
       }
       setCandidate(data.candidate);
+      setNotes(data.candidate.recruiter_notes || "");
     })
     .catch((err) => {
       console.error("Failed to fetch candidate:", err);
@@ -156,39 +192,50 @@ export function CandidateDetail() {
               </div>
             </div>
           </div>
+{/* Right Column */}
+<div className="space-y-6">
+  {/* Recruiter Notes */}
+  <div className="bg-[#4a4a4a] border border-[#5a5a5a] rounded p-4">
+    <h2 className="text-white font-bold mb-3 text-sm tracking-wide">
+      Recruiter Notes
+    </h2>
 
-          {/* Right Column */}
-          <div className="space-y-6">
-            {/* Recruiter Notes */}
-            <div className="bg-[#4a4a4a] border border-[#5a5a5a] rounded p-4">
-              <h2 className="text-white font-bold mb-3 text-sm tracking-wide">Recruiter Notes</h2>
-              <div className="bg-[#5a5a5a] border border-[#6a6a6a] rounded p-3 mb-3 min-h-[120px]">
-                <Textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Recruiter Notes"
-                  className="bg-transparent border-none text-gray-300 text-xs min-h-[100px] resize-none"
-                />
-              </div>
-              <Button
-                variant="outline"
-                className="bg-[#5a5a5a] border-[#6a6a6a] text-white text-xs w-full"
-              >
-                Export Interview Notes (Coming Soon)
-              </Button>
-            </div>
+    <div className="bg-[#5a5a5a] border border-[#6a6a6a] rounded p-3 mb-3 min-h-[120px]">
+      <Textarea
+        value={notes}
+        onChange={(e) => setNotes(e.target.value)}
+        placeholder="Recruiter Notes"
+        className="bg-transparent border-none text-gray-300 text-xs min-h-[100px] resize-none"
+      />
+    </div>
 
-            {/* View Interview Questions */}
-            <div className="bg-[#4a4a4a] border border-[#5a5a5a] rounded p-4">
-              <Button
-                variant="outline"
-                onClick={() => navigate(`/interview/${id || "2"}`)}
-                className="bg-[#5a5a5a] border-[#6a6a6a] text-white text-xs w-full"
-              >
-                View Interview Questions →
-              </Button>
-            </div>
-          </div>
+    <div className="flex items-center justify-between mt-3">
+      <Button
+        variant="outline"
+        onClick={handleSaveNotes}
+        disabled={isSavingNotes}
+        className="bg-[#5a5a5a] border-[#6a6a6a] text-white text-xs"
+      >
+        {isSavingNotes ? "Saving..." : "Save Notes"}
+      </Button>
+
+      {notesMessage && (
+        <span className="text-xs text-gray-400">{notesMessage}</span>
+      )}
+    </div>
+  </div>
+
+  {/* View Interview Questions */}
+  <div className="bg-[#4a4a4a] border border-[#5a5a5a] rounded p-4">
+    <Button
+      variant="outline"
+      onClick={() => navigate(`/interview/${id || "2"}`)}
+      className="bg-[#5a5a5a] border-[#6a6a6a] text-white text-xs w-full"
+    >
+      View Interview Questions →
+    </Button>
+  </div>
+</div>
         </div>
       </div>
     </WireframeLayout>

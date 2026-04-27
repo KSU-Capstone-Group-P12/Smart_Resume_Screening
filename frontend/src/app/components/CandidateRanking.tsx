@@ -20,22 +20,44 @@ export function CandidateRanking() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [jobTitle, setJobTitle] = useState("Data Analyst");
+  const [jobs, setJobs] = useState<{ id: string; title: string; description: string }[]>([]);
+  const [selectedJobId, setSelectedJobId] = useState("");
 
-  useEffect(() => {
-    fetch(`${API_BASE}/api/jobs/current/candidates`)
-      .then((res) => res.json())
-      .then((data) => {
-        setCandidates(data.candidates || []);
-        setJobTitle(data.job_title || "Data Analyst");
+useEffect(() => {
+  fetch(`${API_BASE}/api/jobs`)
+    .then((res) => res.json())
+    .then((data) => {
+      const jobsList = data.jobs || [];
+      setJobs(jobsList);
 
-        if (data.candidates && data.candidates.length > 0) {
-          setSelectedId(data.candidates[0].id);
-        }
-      })
-      .catch((err) => {
-        console.error("Failed to fetch candidates:", err);
-      });
-  }, []);
+      if (jobsList.length > 0) {
+        setSelectedJobId(jobsList[0].id);
+        setJobTitle(jobsList[0].title);
+      }
+    })
+    .catch((err) => {
+      console.error("Failed to fetch jobs:", err);
+    });
+}, []);
+
+useEffect(() => {
+  if (!selectedJobId) return;
+
+  fetch(`${API_BASE}/api/jobs/${selectedJobId}/candidates`)
+    .then((res) => res.json())
+    .then((data) => {
+      setCandidates(data.candidates || []);
+
+      if (data.candidates && data.candidates.length > 0) {
+        setSelectedId(data.candidates[0].id);
+      } else {
+        setSelectedId(null);
+      }
+    })
+    .catch((err) => {
+      console.error("Failed to fetch candidates:", err);
+    });
+}, [selectedJobId]);
 
   return (
     <WireframeLayout title="CANDIDATE RANKING DASHBOARD">
@@ -55,7 +77,21 @@ export function CandidateRanking() {
               Job
             </div>
             <div className="bg-[#5a5a5a] border border-[#6a6a6a] px-3 py-1 rounded text-white text-xs">
-              {jobTitle}
+              <select
+                value={selectedJobId}
+                onChange={(e) => {
+                  const newJobId = e.target.value;
+                  setSelectedJobId(newJobId);
+                  const selectedJob = jobs.find((job) => job.id === newJobId);
+                  setJobTitle(selectedJob?.title || "Selected Job");
+                }}
+                className="bg-transparent text-white text-xs outline-none"> 
+                {jobs.map((job) => (
+                  <option key={job.id} value={job.id} className="text-black">
+                    {job.title}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="bg-[#5a5a5a] border border-[#6a6a6a] px-3 py-1 rounded text-white text-xs">
               Upload More

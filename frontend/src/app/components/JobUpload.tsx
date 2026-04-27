@@ -12,13 +12,11 @@ const API_BASE = "http://127.0.0.1:8000";
 
 export function JobUpload() {
   const navigate = useNavigate();
-  const [jobTitle, setJobTitle] = useState("Data Analyst – Entry Level");
-  const [jobDescription, setJobDescription] = useState(
-    "We are seeking a Data Analyst with experience in Python, SQL, and statistical analysis..."
-  );
+  const [jobTitle, setJobTitle] = useState("");
+  const [jobDescription, setJobDescription] = useState("");
 
-const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
 
   const [filters, setFilters] = useState({
     scoreRange: false,
@@ -27,18 +25,20 @@ const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
     experienceFilter: false,
   });
 
-  const uploadJobDescription = async () => {
-    const response = await fetch(
-  `${API_BASE}/api/jobs/upload?job_title=${encodeURIComponent(jobTitle)}&job_text=${encodeURIComponent(jobDescription)}`,
-  {
-    method: "POST",
-  }
-);
-
-    if (!response.ok) {
-      throw new Error("Failed to upload the job description.");
+const uploadJobDescription = async () => {
+  const response = await fetch(
+    `${API_BASE}/api/jobs/upload?job_title=${encodeURIComponent(jobTitle)}&job_text=${encodeURIComponent(jobDescription)}`,
+    {
+      method: "POST",
     }
-  };
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to upload the job description.");
+  }
+
+  return response.json();
+};
 
 // Send selected resume files to the FastAPI backend
 const [isSubmitting, setIsSubmitting] = useState(false);
@@ -69,13 +69,15 @@ const handleStartAnalysis = async () => {
   try {
     setIsSubmitting(true);
 
-    await uploadJobDescription();
+    const jobData = await uploadJobDescription();
+    const jobId = jobData.job_id;
 
     const successfulUploads: string[] = [];
 
     for (const file of selectedFiles) {
       const formData = new FormData();
       formData.append("file", file);
+      formData.append("job_id", jobId);
 
       const response = await fetch(`${API_BASE}/api/resumes/upload`, {
         method: "POST",
@@ -94,11 +96,12 @@ const handleStartAnalysis = async () => {
     setUploadedFiles(successfulUploads);
     setSelectedFiles([]);
     navigate("/processing", {
-  state: {
-    uploadComplete: true,
-    uploadedCount: successfulUploads.length,
-  },
-});
+      state: {
+        uploadComplete: true,
+        uploadedCount: successfulUploads.length,
+        jobId: jobId,
+      },
+    });
   } catch (error) {
     console.error("Start analysis error:", error);
   } finally {
@@ -185,7 +188,7 @@ const handleStartAnalysis = async () => {
 )}
         </div>
 
-        {/* Filters Section */}
+        {/* Filters Section Commented out for now.
         <div className="bg-[#4a4a4a] border border-[#5a5a5a] rounded p-4">
           <h2 className="text-white font-bold mb-3 text-sm tracking-wide">Filters</h2>
           <div className="grid grid-cols-2 gap-4">
@@ -247,7 +250,7 @@ const handleStartAnalysis = async () => {
             </div>
           </div>
         </div>
-
+        */}
         {/* Start Button */}
         <div className="bg-[#5a5a5a] border border-[#6a6a6a] rounded p-3 text-center">
           <Button

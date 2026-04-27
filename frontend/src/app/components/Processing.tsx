@@ -17,6 +17,7 @@ export function Processing() {
 
   const uploadComplete = location.state?.uploadComplete ?? false;
   const uploadedCount = location.state?.uploadedCount ?? 0;
+  const jobId = location.state?.jobId ?? "";
 
   const [steps, setSteps] = useState<Step[]>([
     { label: "Upload Complete", status: uploadComplete ? "complete" : "pending" },
@@ -58,7 +59,12 @@ export function Processing() {
 
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      const response = await fetch(`${API_BASE}/api/jobs/current/candidates`);
+      if (!jobId) {
+        setStatusMessage("No job selected for processing.");
+        return;
+      }
+
+const response = await fetch(`${API_BASE}/api/jobs/${jobId}/candidates`);
       const data = await response.json();
 
       if (cancelled) return;
@@ -96,7 +102,7 @@ export function Processing() {
   return () => {
     cancelled = true;
   };
-}, [navigate]);
+}, [navigate, jobId]);
 
   return (
     <WireframeLayout title="SCREEN 2: PROCESSING...">

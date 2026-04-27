@@ -1,9 +1,9 @@
 # Run with: uvicorn main:app --reload
-from db import resumes_collection, candidates_collection, interview_questions_collection
+from db import resumes_collection, candidates_collection, interview_questions_collection, jobs_collection
 from datetime import datetime, timezone
-
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
+from bson import ObjectId
 import pdfplumber
 import docx
 import tempfile
@@ -65,7 +65,22 @@ async def upload_job_description(job_title: str = "", job_text: str = ""):
     current_job_description = job_text.strip()
     candidate_results = []
 
+    existing_job = jobs_collection.find_one({
+        "title": current_job_title,
+        "description": current_job_description,
+        })
+    if existing_job:
+        job_id = str(existing_job["_id"])
+    else:
+        job_doc = {
+            "title": current_job_title,
+            "description": current_job_description,
+            "created_at": datetime.now(timezone.utc),
+            }
+        job_insert = jobs_collection.insert_one(job_doc)
+        job_id = str(job_insert.inserted_id)
     return {
+        "job_id": job_id,
         "job_title": current_job_title,
         "job_description": current_job_description
     }
@@ -76,6 +91,69 @@ def get_current_job():
         "job_title": current_job_title,
         "job_description": current_job_description
     }
+
+@app.get("/api/jobs")
+def get_jobs():
+    job_docs = list(
+        jobs_collection.find(
+            {},
+            {
+                "_id": 1,
+                "title": 1,
+                "description": 1,
+                "created_at": 1,
+            }
+        ).sort("created_at", -1)
+    )
+
+    jobs = []
+    for job in job_docs:
+        jobs.append({
+            "id": str(job["_id"]),
+            "title": job.get("title", "Untitled Role"),
+            "description": job.get("description", ""),
+        })
+
+    return {"jobs": jobs}
+
+@app.get("/api/jobs/{job_id}/candidates")
+def get_candidates_for_job(job_id: str):
+    candidate_docs = list(
+        candidates_collection.find(
+            {"job_id": job_id},
+            {
+                "_id": 1,
+                "candidate_name": 1,
+                "final_score": 1,
+                "strengths": 1,
+                "gaps": 1,
+                "processed_at": 1,
+            }
+        )
+    )
+
+    sorted_candidates = sorted(
+        candidate_docs,
+        key=lambda candidate: candidate.get("final_score", 0),
+        reverse=True
+    )
+
+    formatted_candidates = []
+    for index, candidate in enumerate(sorted_candidates, start=1):
+        strengths = candidate.get("strengths", [])
+        gaps = candidate.get("gaps", [])
+
+        formatted_candidates.append({
+            "id": str(candidate["_id"]),
+            "rank": index,
+            "name": candidate.get("candidate_name", f"Candidate {index}"),
+            "score": f'{candidate.get("final_score", 0)}%',
+            "skills": ", ".join(strengths[:3]),
+            "gaps": ", ".join(gaps[:3]),
+        })
+
+    return {"candidates": formatted_candidates}
+
 # --------------------------
 # Candidate Dashboard
 # -------------------------
@@ -126,11 +204,11 @@ def get_candidates():
 
 @app.get("/api/candidates/{candidate_id}")
 def get_candidate(candidate_id: str):
-    candidate_docs = list(
-        candidates_collection.find(
-            {},
+    try:
+        candidate = candidates_collection.find_one(
+            {"_id": ObjectId(candidate_id)},
             {
-                "_id": 0,
+                "_id": 1,
                 "candidate_name": 1,
                 "summary": 1,
                 "final_score": 1,
@@ -139,31 +217,21 @@ def get_candidate(candidate_id: str):
                 "resume_text": 1,
                 "section_scores": 1,
                 "job_description": 1,
+                "job_id": 1,
+                "recruiter_notes": 1,
                 "processed_at": 1,
             }
         )
-    )
-
-    sorted_candidates = sorted(
-        candidate_docs,
-        key=lambda candidate: candidate.get("final_score", 0),
-        reverse=True
-    )
-
-    try:
-        candidate_index = int(candidate_id) - 1
-    except ValueError as exc:
+    except Exception as exc:
         raise HTTPException(status_code=404, detail="Candidate not found.") from exc
 
-    if candidate_index < 0 or candidate_index >= len(sorted_candidates):
+    if not candidate:
         raise HTTPException(status_code=404, detail="Candidate not found.")
-
-    candidate = sorted_candidates[candidate_index]
 
     return {
         "candidate": {
-            "id": candidate_id,
-            "candidate_name": candidate.get("candidate_name", f"Candidate {candidate_id}"),
+            "id": str(candidate["_id"]),
+            "candidate_name": candidate.get("candidate_name", "Candidate"),
             "summary": candidate.get("summary", ""),
             "score": f'{candidate.get("final_score", 0)}%',
             "strengths": candidate.get("strengths", []),
@@ -171,44 +239,54 @@ def get_candidate(candidate_id: str):
             "resume_text": candidate.get("resume_text", ""),
             "section_scores": candidate.get("section_scores", {}),
             "job_description": candidate.get("job_description", ""),
+            "recruiter_notes": candidate.get("recruiter_notes", ""),
+            "job_id": candidate.get("job_id", ""),
         }
     }
 
+@app.put("/api/candidates/{candidate_id}/notes")
+def update_candidate_notes(candidate_id: str, payload: dict):
+    notes = (payload.get("recruiter_notes") or "").strip()
+
+    try:
+        result = candidates_collection.update_one(
+            {"_id": ObjectId(candidate_id)},
+            {"$set": {"recruiter_notes": notes}}
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=404, detail="Candidate not found.") from exc
+
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Candidate not found.")
+
+    return {
+        "message": "Recruiter notes saved successfully.",
+        "recruiter_notes": notes
+    }
 
 @app.post("/api/candidates/{candidate_id}/interview-questions")
 def create_interview_questions(candidate_id: str):
-    candidate_docs = list(
-        candidates_collection.find(
-            {},
+    try:
+        candidate = candidates_collection.find_one(
+            {"_id": ObjectId(candidate_id)},
             {
-                "_id": 0,
+                "_id": 1,
                 "candidate_name": 1,
                 "strengths": 1,
                 "gaps": 1,
                 "resume_text": 1,
                 "job_description": 1,
+                "job_id": 1,
                 "final_score": 1,
             }
         )
-    )
-
-    sorted_candidates = sorted(
-        candidate_docs,
-        key=lambda candidate: candidate.get("final_score", 0),
-        reverse=True
-    )
-
-    try:
-        candidate_index = int(candidate_id) - 1
-    except ValueError as exc:
+    except Exception as exc:
         raise HTTPException(status_code=404, detail="Candidate not found.") from exc
 
-    if candidate_index < 0 or candidate_index >= len(sorted_candidates):
+    if not candidate:
         raise HTTPException(status_code=404, detail="Candidate not found.")
 
-    candidate = sorted_candidates[candidate_index]
-
-    job_description_for_questions = current_job_description or candidate.get("job_description", "")
+    job_description_for_questions = candidate.get("job_description", "") or current_job_description
     if not job_description_for_questions:
         raise HTTPException(status_code=400, detail="No job description available for this candidate.")
 
@@ -224,7 +302,7 @@ def create_interview_questions(candidate_id: str):
 
         interview_doc = {
             "candidate_id": candidate_id,
-            "candidate_name": candidate.get("candidate_name", f"Candidate {candidate_id}"),
+            "candidate_name": candidate.get("candidate_name", "Candidate"),
             "job_title": current_job_title,
             "job_description": job_description_for_questions,
             "questions": parsed_questions,
@@ -248,7 +326,7 @@ def create_interview_questions(candidate_id: str):
 
     return {
         "candidate_id": candidate_id,
-        "candidate_name": candidate.get("candidate_name", f"Candidate {candidate_id}"),
+        "candidate_name": candidate.get("candidate_name", "Candidate"),
         "questions": questions,
     }
 
@@ -297,7 +375,10 @@ def extract_text_from_docx(file_path: str) -> str:
 # -------------------------
 
 @app.post("/api/resumes/upload")
-async def upload_resume(file: UploadFile = File(...)):
+async def upload_resume(
+    file: UploadFile = File(...),
+    job_id: str = Form(...)
+):
 
     global current_job_description
     global candidate_results
@@ -341,6 +422,7 @@ async def upload_resume(file: UploadFile = File(...)):
             "candidate_name_raw": fallback_name,
             "filename": file.filename,
             "file_type": suffix.replace(".", ""),
+            "job_id": job_id,
             "job_description": current_job_description,
             "raw_text": extracted_text,
             "parse_status": "uploaded",
@@ -385,6 +467,7 @@ async def upload_resume(file: UploadFile = File(...)):
 
         candidate_doc = {
             "resume_id": str(resume_insert.inserted_id),
+            "job_id": job_id,
             "candidate_name": result["candidate_name"],
             "summary": result["summary"],
             "resume_text": result["resume_text"],
@@ -394,6 +477,7 @@ async def upload_resume(file: UploadFile = File(...)):
             "strengths": result["strengths"],
             "gaps": result["gaps"],
             "interview_questions": [],
+            "recruiter_notes": "",
             "processed_at": datetime.now(timezone.utc),
         }
 
