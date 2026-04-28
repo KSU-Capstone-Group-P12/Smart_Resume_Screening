@@ -16,6 +16,7 @@ export function CandidateDetail() {
   const [isSavingNotes, setIsSavingNotes] = useState(false);
   const [notesMessage, setNotesMessage] = useState("");
 
+
  const handleSaveNotes = async () => {
   if (!id) return;
 

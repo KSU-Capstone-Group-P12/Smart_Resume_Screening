@@ -19,7 +19,7 @@ export function CandidateRanking() {
   const navigate = useNavigate();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
-  const [jobTitle, setJobTitle] = useState("Data Analyst");
+  const [jobTitle, setJobTitle] = useState("");
   const [jobs, setJobs] = useState<{ id: string; title: string; description: string }[]>([]);
   const [selectedJobId, setSelectedJobId] = useState("");
 
@@ -74,7 +74,7 @@ useEffect(() => {
           </Button>
           <div className="flex gap-2">
             <div className="bg-[#5a5a5a] border border-[#6a6a6a] px-3 py-1 rounded text-white text-xs">
-              Job
+              Role:
             </div>
             <div className="bg-[#5a5a5a] border border-[#6a6a6a] px-3 py-1 rounded text-white text-xs">
               <select
@@ -93,12 +93,13 @@ useEffect(() => {
                 ))}
               </select>
             </div>
-            <div className="bg-[#5a5a5a] border border-[#6a6a6a] px-3 py-1 rounded text-white text-xs">
+            <Button
+              variant="outline"
+              onClick={() => navigate("/job-upload")}
+              className="bg-[#5a5a5a] border-[#6a6a6a] text-white text-xs h-auto px-3 py-1"
+            >
               Upload More
-            </div>
-            <div className="bg-[#5a5a5a] border border-[#6a6a6a] px-3 py-1 rounded text-white text-xs">
-              Back to Jobs
-            </div>
+            </Button>
           </div>
         </div>
 
