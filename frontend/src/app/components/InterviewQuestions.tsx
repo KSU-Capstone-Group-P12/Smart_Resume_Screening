@@ -1,221 +1,308 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
-import { Button } from "./ui/button";
-import { ArrowLeft, Loader2 } from "lucide-react";
-import { WireframeLayout } from "./WireframeLayout";
+import { ArrowLeft, Loader2, Sparkles, MessageSquareText } from "lucide-react";
 
 const API_BASE = "http://127.0.0.1:8000";
-
-type Candidate = {
-  id: string;
-  candidate_name: string;
-  strengths: string[];
-  gaps: string[];
-};
 
 export function InterviewQuestions() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const [candidate, setCandidate] = useState<Candidate | null>(null);
+
+  const [candidateName, setCandidateName] = useState("");
   const [questions, setQuestions] = useState<string[]>([]);
-  const [rawQuestions, setRawQuestions] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const parseQuestions = (text: string) =>
-    text
+  const parseQuestions = (text: string) => {
+    return text
       .split(/\r?\n/)
       .map((line) => line.trim())
-      .filter((line) => /^\d+[\.\)]\s+/.test(line));
-
-  const loadCandidate = async () => {
-    if (!id) return;
-
-    try {
-      const response = await fetch(`${API_BASE}/api/candidates/${id}`);
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.detail || "Failed to load candidate details.");
-      }
-
-      setCandidate(data.candidate);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load candidate details.");
-    }
+      .filter((line) => line.length > 0);
   };
 
-  const generateInterviewQuestions = async () => {
+  useEffect(() => {
+    if (!id) return;
+
+    fetch(`${API_BASE}/api/candidates/${id}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setCandidateName(data?.candidate?.candidate_name || "Candidate");
+      })
+      .catch(() => {
+        setError("Failed to load candidate.");
+      });
+  }, [id]);
+
+  const generateQuestions = async () => {
     if (!id) return;
 
     setLoading(true);
     setError("");
+    setQuestions([]);
 
     try {
-      const response = await fetch(`${API_BASE}/api/candidates/${id}/interview-questions`, {
-        method: "POST",
-      });
-      const data = await response.json();
+      const res = await fetch(
+        `${API_BASE}/api/candidates/${id}/interview-questions`,
+        { method: "POST" }
+      );
 
-      if (!response.ok) {
-        throw new Error(data.detail || "Failed to generate interview questions.");
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.detail || "Failed to generate questions");
       }
 
-      setRawQuestions(data.questions);
       setQuestions(parseQuestions(data.questions));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to generate interview questions.");
+    } catch (err: any) {
+      setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    loadCandidate();
-  }, [id]);
-
-  useEffect(() => {
-    if (id) {
-      generateInterviewQuestions();
-    }
-  }, [id]);
-
   return (
-    <WireframeLayout title="SCREEN 5: INTERVIEW QUESTIONS">
-      <div className="space-y-6">
-        {/* Back Button */}
-        <Button
-          variant="ghost"
-          onClick={() => navigate("/")}
-          className="text-gray-300 hover:text-white text-xs"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Overview
-        </Button>
+    <div style={pageStyle}>
+      <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
+        <button onClick={() => navigate("/ranking")} style={backButton}>
+          <ArrowLeft size={16} style={{ marginRight: 6 }} />
+          Back to Ranking
+        </button>
 
-        {/* Skill Validation Questions */}
-        <div className="bg-[#4a4a4a] border border-[#5a5a5a] rounded p-4">
-          <h2 className="text-white font-bold mb-3 text-sm tracking-wide">
-            Skill Validation Questions
-          </h2>
-          <div className="h-16 bg-[#5a5a5a] border border-[#6a6a6a] rounded"></div>
-        </div>
+        <div style={headerCard}>
+          <div>
+            <p style={subTitle}>Interview Support</p>
+            <h1 style={title}>Interview Questions</h1>
+            <p style={desc}>
+              Generate AI-assisted interview questions for{" "}
+              <span style={{ color: "#ffffff", fontWeight: 700 }}>
+                {candidateName || "Candidate"}
+              </span>
+              .
+            </p>
+          </div>
 
-        {/* Gap Clarification Questions */}
-        <div className="bg-[#4a4a4a] border border-[#5a5a5a] rounded p-4">
-          <h2 className="text-white font-bold mb-3 text-sm tracking-wide">
-            Gap Clarification Questions
-          </h2>
-          <div className="h-16 bg-[#5a5a5a] border border-[#6a6a6a] rounded"></div>
-        </div>
-
-        {/* Skill Validation Questions with Examples */}
-        <div className="bg-[#4a4a4a] border border-[#5a5a5a] rounded p-4">
-          <h2 className="text-white font-bold mb-3 text-sm tracking-wide">
-            Skill Validation Questions
-          </h2>
-          <div className="space-y-3">
-            {questions.map((question, idx) => (
-              <div
-                key={idx}
-                className="bg-[#5a5a5a] border border-[#6a6a6a] rounded p-3 text-gray-300 text-xs"
-              >
-                {question}
-              </div>
-            ))}
+          <div style={iconBox}>
+            <MessageSquareText size={30} color="#60a5fa" />
           </div>
         </div>
 
-        {/* Regenerate Button */}
-        <div className="bg-[#4a4a4a] border border-[#5a5a5a] rounded p-4 text-center">
-          <Button
-            variant="outline"
-            className="bg-[#5a5a5a] border-[#6a6a6a] text-white text-xs"
-          >
-            Regenerate Questions
-          </Button>
-        </div>
+        {error && <div style={errorBox}>{error}</div>}
 
-        {/* Ethical & Fairness Panel */}
-        <div className="mt-8">
-          <div className="bg-[#4a4a4a] border border-[#5a5a5a] rounded p-4">
-            <h2 className="text-white font-bold mb-4 text-sm tracking-wide">
-              ETHICAL & FAIRNESS UX ELEMENTS
-            </h2>
-
-            <div className="space-y-4">
-              {/* Transparency */}
-              <div className="bg-[#5a5a5a] border border-[#6a6a6a] rounded p-3">
-                <h3 className="text-white font-bold mb-2 text-xs">TRANSPARENCY</h3>
-                <div className="h-12 bg-[#6a6a6a] rounded"></div>
-              </div>
-
-              {/* Checkmarks */}
-              <div className="bg-[#5a5a5a] border border-[#6a6a6a] rounded p-3 space-y-2">
-                <div className="flex items-center gap-2 text-xs">
-                  <span className="text-red-400">✗</span>
-                  <span className="text-gray-300">No Color-Coded Rejection</span>
-                </div>
-                <div className="flex items-center gap-2 text-xs">
-                  <span className="text-red-400">✗</span>
-                  <span className="text-gray-300">Explainable AI</span>
-                </div>
-                <div className="flex items-center gap-2 text-xs">
-                  <span className="text-green-400">✓</span>
-                  <span className="text-gray-300">No Demographic Data Displayed</span>
-                </div>
-                <div className="flex items-center gap-2 text-xs">
-                  <span className="text-green-400">✓</span>
-                  <span className="text-gray-300">Human-in-Lo/Looop</span>
-                </div>
-                <div className="flex items-center gap-2 text-xs">
-                  <span className="text-green-400">✓</span>
-                  <span className="text-gray-300">Fairness-Aware UI</span>
-                </div>
-              </div>
-
-              {/* Architectural Mapping */}
-              <div className="bg-[#5a5a5a] border border-[#6a6a6a] rounded p-3">
-                <h3 className="text-white font-bold mb-3 text-xs">ARCHITECTURAL MAPPING</h3>
-                <div className="bg-[#6a6a6a] rounded p-3 text-[10px] text-gray-400">
-                  <div className="mb-2">Backend Components</div>
-                  <div className="grid grid-cols-3 gap-2 mb-3">
-                    <div className="bg-[#5a5a5a] border border-[#4a4a4a] rounded p-2 text-center">
-                      Resume Ingestion
-                    </div>
-                    <div className="bg-[#5a5a5a] border border-[#4a4a4a] rounded p-2 text-center">
-                      [ Embedder + Model ]
-                    </div>
-                    <div className="bg-[#5a5a5a] border border-[#4a4a4a] rounded p-2 text-center">
-                      Ranking
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-4 gap-2">
-                    <div className="bg-[#5a5a5a] border border-[#4a4a4a] rounded p-2 text-center">
-                      LLM
-                    </div>
-                    <div className="bg-[#5a5a5a] border border-[#4a4a4a] rounded p-2 text-center">
-                      + UI
-                    </div>
-                    <div className="bg-[#5a5a5a] border border-[#4a4a4a] rounded p-2 text-center">
-                      Embeddings
-                    </div>
-                    <div className="bg-[#5a5a5a] border border-[#4a4a4a] rounded p-2 text-center">
-                      Ranking
-                    </div>
-                    <div className="bg-[#5a5a5a] border border-[#4a4a4a] rounded p-2 text-center col-span-2">
-                      LLM (Question/Exp)
-                    </div>
-                    <div className="bg-[#5a5a5a] border border-[#4a4a4a] rounded p-2 text-center col-span-2">
-                      HumanFeedback
-                    </div>
-                  </div>
-                </div>
-              </div>
+        <div style={cardStyle}>
+          <div style={sectionHeader}>
+            <Sparkles color="#34d399" />
+            <div>
+              <h3 style={sectionTitle}>Generate Questions</h3>
+              <p style={desc}>
+                Questions are based on the candidate profile, role requirements,
+                strengths, and gaps.
+              </p>
             </div>
           </div>
+
+          <button
+            onClick={generateQuestions}
+            disabled={loading}
+            style={{
+              ...generateButton,
+              opacity: loading ? 0.7 : 1,
+              cursor: loading ? "not-allowed" : "pointer",
+            }}
+          >
+            {loading ? (
+              <>
+                <Loader2
+                  size={18}
+                  style={{
+                    marginRight: 8,
+                    animation: "spin 1s linear infinite",
+                  }}
+                />
+                Generating...
+              </>
+            ) : (
+              "Generate Interview Questions"
+            )}
+          </button>
+        </div>
+
+        <div style={cardStyle}>
+          <div style={sectionHeader}>
+            <MessageSquareText color="#60a5fa" />
+            <div>
+              <h3 style={sectionTitle}>Suggested Questions</h3>
+              <p style={desc}>
+                Recruiters can use these questions to validate skills and clarify
+                gaps.
+              </p>
+            </div>
+          </div>
+
+          {questions.length > 0 ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              {questions.map((q, i) => (
+                <div key={i} style={questionBox}>
+                  <div style={questionNumber}>{i + 1}</div>
+                  <p style={questionText}>{q}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={emptyBox}>
+              No questions generated yet. Click the button above to generate
+              interview questions.
+            </div>
+          )}
         </div>
       </div>
-    </WireframeLayout>
+    </div>
   );
 }
+
+/* ---------- styles ---------- */
+
+const pageStyle = {
+  minHeight: "100vh",
+  background: "linear-gradient(135deg, #020617, #071426, #0f172a)",
+  padding: "32px",
+  color: "#fff",
+};
+
+const backButton = {
+  marginBottom: "20px",
+  padding: "10px 16px",
+  borderRadius: "10px",
+  background: "rgba(255,255,255,0.08)",
+  border: "1px solid rgba(255,255,255,0.08)",
+  color: "#fff",
+  cursor: "pointer",
+  display: "flex",
+  alignItems: "center",
+};
+
+const headerCard = {
+  background: "linear-gradient(145deg, #0b1220, #0f1e3a)",
+  borderRadius: "16px",
+  padding: "28px",
+  marginBottom: "20px",
+  border: "1px solid rgba(255,255,255,0.05)",
+  boxShadow: "0 20px 40px rgba(0,0,0,0.5)",
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+};
+
+const cardStyle = {
+  background: "linear-gradient(145deg, #0b1220, #0f1e3a)",
+  borderRadius: "16px",
+  padding: "24px",
+  marginBottom: "20px",
+  border: "1px solid rgba(255,255,255,0.05)",
+  boxShadow: "0 20px 40px rgba(0,0,0,0.5)",
+};
+
+const sectionHeader = {
+  display: "flex",
+  alignItems: "center",
+  gap: "12px",
+  marginBottom: "18px",
+};
+
+const sectionTitle = {
+  margin: 0,
+  fontSize: "18px",
+  fontWeight: 700,
+};
+
+const subTitle = {
+  fontSize: "12px",
+  color: "#64748b",
+  marginBottom: "6px",
+  textTransform: "uppercase" as const,
+  letterSpacing: "1px",
+};
+
+const title = {
+  margin: 0,
+  fontSize: "30px",
+  fontWeight: 800,
+};
+
+const desc = {
+  fontSize: "13px",
+  color: "#94a3b8",
+  marginTop: "6px",
+};
+
+const iconBox = {
+  width: "64px",
+  height: "64px",
+  borderRadius: "16px",
+  background: "rgba(96,165,250,0.12)",
+  border: "1px solid rgba(96,165,250,0.22)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+};
+
+const generateButton = {
+  width: "100%",
+  padding: "14px 18px",
+  borderRadius: "12px",
+  background: "rgba(16,185,129,0.15)",
+  border: "1px solid rgba(16,185,129,0.25)",
+  color: "#a7f3d0",
+  fontWeight: 700,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+};
+
+const questionBox = {
+  display: "flex",
+  gap: "14px",
+  alignItems: "flex-start",
+  background: "rgba(255,255,255,0.05)",
+  border: "1px solid rgba(255,255,255,0.06)",
+  borderRadius: "12px",
+  padding: "16px",
+};
+
+const questionNumber = {
+  minWidth: "30px",
+  height: "30px",
+  borderRadius: "999px",
+  background: "rgba(96,165,250,0.16)",
+  border: "1px solid rgba(96,165,250,0.28)",
+  color: "#bfdbfe",
+  fontWeight: 700,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+};
+
+const questionText = {
+  margin: 0,
+  color: "#e5e7eb",
+  fontSize: "14px",
+  lineHeight: 1.5,
+};
+
+const emptyBox = {
+  background: "rgba(255,255,255,0.04)",
+  border: "1px solid rgba(255,255,255,0.06)",
+  borderRadius: "12px",
+  padding: "18px",
+  color: "#94a3b8",
+  fontSize: "14px",
+  textAlign: "center" as const,
+};
+
+const errorBox = {
+  background: "rgba(255,80,80,0.1)",
+  border: "1px solid rgba(255,80,80,0.3)",
+  padding: "12px 16px",
+  borderRadius: "10px",
+  marginBottom: "20px",
+  color: "#ff6b6b",
+};

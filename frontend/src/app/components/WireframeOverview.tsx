@@ -1,171 +1,419 @@
 import { useNavigate } from "react-router";
-import { FileText, Loader2, BarChart3, User, MessageSquare, Layout } from "lucide-react";
+import {
+  FileText,
+  BarChart3,
+  User,
+  MessageSquare,
+  UploadCloud,
+  Brain,
+  ShieldCheck,
+  ArrowRight,
+  CheckCircle2,
+} from "lucide-react";
 
 export function WireframeOverview() {
   const navigate = useNavigate();
 
-  const screens = [
+  const actions = [
     {
-      title: "Screen 1: Job Description + Upload",
+      title: "Create New Screening",
       path: "/job-upload",
       icon: FileText,
-      description: "Upload job description and candidate resumes",
+      description: "Upload a job description and candidate resumes.",
     },
     {
-      title: "Screen 2: Processing",
-      path: "/processing",
-      icon: Loader2,
-      description: "View semantic analysis in progress",
-    },
-    {
-      title: "Screen 3: Candidate Ranking Dashboard",
+      title: "Candidate Ranking Dashboard",
       path: "/ranking",
       icon: BarChart3,
-      description: "Review ranked candidates with explanations",
+      description: "Review ranked candidates with explainable AI insights.",
     },
     {
-      title: "Screen 4: Candidate Detail View",
-      path: "/candidate/2",
+      title: "Candidate Detail",
+      path: "/candidate/1",
       icon: User,
-      description: "Deep dive into individual candidate profiles",
+      description: "View strengths, gaps, scores, and recruiter notes.",
     },
     {
-      title: "Screen 5: Interview Questions",
-      path: "/interview/2",
+      title: "Interview Questions",
+      path: "/interview/1",
       icon: MessageSquare,
-      description: "AI-generated interview questions and ethical framework",
+      description: "Generate interview questions based on resume gaps.",
+    },
+  ];
+
+  const workflow = [
+    {
+      icon: UploadCloud,
+      title: "Upload",
+      text: "Recruiters upload the job description and resumes.",
     },
     {
-      title: "View All Screens",
-      path: "/all-screens",
-      icon: Layout,
-      description: "See complete wireframe documentation",
+      icon: Brain,
+      title: "Analyze",
+      text: "The system compares resumes against the role requirements.",
+    },
+    {
+      icon: BarChart3,
+      title: "Rank",
+      text: "Candidates are ranked with section-level match scores.",
+    },
+    {
+      icon: ShieldCheck,
+      title: "Review",
+      text: "Recruiters make the final decision with AI support.",
     },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#1a1a1a] via-[#2a2a2a] to-[#3a3a3a] p-8">
-      <div className="max-w-7xl mx-auto space-y-12">
-        {/* Header */}
-        <div className="text-center space-y-6 py-12">
-          <div className="inline-block bg-[#4a4a4a] border-2 border-[#5a5a5a] rounded-lg px-6 py-3">
-            <h1 className="text-5xl font-bold text-white tracking-wider">
-              SMART RESUME SCREENING SYSTEM
-            </h1>
-          </div>
-          <p className="text-2xl text-gray-400 tracking-wide">
-            Milestone 2: AI-Driven Application Development
-          </p>
-          <div className="flex justify-center gap-4 text-sm text-gray-500">
-            <span>Human-in-the-Loop AI</span>
-            <span>•</span>
-            <span>Explainable Rankings</span>
-            <span>•</span>
-            <span>Fairness-Aware Design</span>
-          </div>
-        </div>
+    <div style={pageStyle}>
+      <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+        <section style={heroStyle}>
+          <div style={pill}>Humane Decision Support AI</div>
 
-        {/* Navigation Grid */}
-        <div>
-          <h2 className="text-white text-2xl font-bold mb-6 text-center">
-            Select a Screen to View
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {screens.map((screen) => {
-              const Icon = screen.icon;
+          <h1 style={mainTitle}>Smart Resume Screening</h1>
+
+          <p style={heroText}>
+            AI-powered candidate ranking and interview support for recruiters,
+            designed for transparency, explainability, and human review.
+          </p>
+
+          <div style={heroButtons}>
+            <button style={primaryButton} onClick={() => navigate("/job-upload")}>
+              Start New Screening <ArrowRight size={16} />
+            </button>
+
+            <button style={secondaryButton} onClick={() => navigate("/ranking")}>
+              View Rankings
+            </button>
+          </div>
+        </section>
+
+        <section style={actionGrid}>
+          {actions.map((item) => {
+            const Icon = item.icon;
+
+            return (
+              <div
+                key={item.path}
+                onClick={() => navigate(item.path)}
+                style={actionCard}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-5px)";
+                  e.currentTarget.style.border = "1px solid rgba(96,165,250,0.35)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.border = "1px solid rgba(255,255,255,0.06)";
+                }}
+              >
+                <div style={iconBox}>
+                  <Icon size={26} color="#60a5fa" />
+                </div>
+
+                <h3 style={cardTitle}>{item.title}</h3>
+                <p style={cardText}>{item.description}</p>
+              </div>
+            );
+          })}
+        </section>
+
+        <section style={workflowPanel}>
+          <div style={sectionHeader}>
+            <div>
+              <p style={sectionLabel}>System Workflow</p>
+              <h2 style={sectionTitle}>From resume upload to recruiter review</h2>
+            </div>
+            <p style={sectionDesc}>
+              The system supports recruiters without automatically rejecting candidates.
+            </p>
+          </div>
+
+          <div style={workflowGrid}>
+            {workflow.map((step, index) => {
+              const Icon = step.icon;
+
               return (
-                <button
-                  key={screen.path}
-                  onClick={() => navigate(screen.path)}
-                  className="group bg-[#3a3a3a] hover:bg-[#4a4a4a] border-2 border-[#4a4a4a] hover:border-[#6a6a6a] rounded-lg p-8 text-left transition-all duration-300 transform hover:scale-105"
-                >
-                  <div className="flex items-start gap-4 mb-4">
-                    <div className="bg-[#5a5a5a] group-hover:bg-[#6a6a6a] p-3 rounded-lg transition-colors">
-                      <Icon className="w-6 h-6 text-gray-300" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-white font-bold text-lg mb-2 group-hover:text-blue-300 transition-colors">
-                        {screen.title}
-                      </h3>
-                      <p className="text-gray-400 text-sm leading-relaxed">
-                        {screen.description}
-                      </p>
-                    </div>
+                <div key={step.title} style={workflowCard}>
+                  <div style={workflowIcon}>
+                    <Icon size={22} color="#34d399" />
                   </div>
-                  <div className="text-blue-400 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                    View Wireframe →
-                  </div>
-                </button>
+                  <div style={stepNumber}>0{index + 1}</div>
+                  <h3 style={workflowTitle}>{step.title}</h3>
+                  <p style={workflowText}>{step.text}</p>
+                </div>
               );
             })}
           </div>
-        </div>
+        </section>
 
-        {/* Features Grid */}
-        <div className="bg-[#3a3a3a] border-2 border-[#4a4a4a] rounded-lg p-8">
-          <h2 className="text-white font-bold text-2xl mb-6 text-center">System Features</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-[#4a4a4a] border border-[#5a5a5a] rounded-lg p-6">
-              <h3 className="text-white font-bold mb-4">AI-Powered Analysis</h3>
-              <ul className="space-y-2 text-gray-300 text-sm">
-                <li className="flex items-start gap-2">
-                  <span className="text-green-400 mt-1">✓</span>
-                  <span>Semantic similarity scoring</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-green-400 mt-1">✓</span>
-                  <span>Vector embeddings</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-green-400 mt-1">✓</span>
-                  <span>Category-level matching</span>
-                </li>
-              </ul>
-            </div>
-            <div className="bg-[#4a4a4a] border border-[#5a5a5a] rounded-lg p-6">
-              <h3 className="text-white font-bold mb-4">Ethical Design</h3>
-              <ul className="space-y-2 text-gray-300 text-sm">
-                <li className="flex items-start gap-2">
-                  <span className="text-green-400 mt-1">✓</span>
-                  <span>Human-in-the-Loop oversight</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-green-400 mt-1">✓</span>
-                  <span>No automatic rejection</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-green-400 mt-1">✓</span>
-                  <span>Fairness-aware UI</span>
-                </li>
-              </ul>
-            </div>
-            <div className="bg-[#4a4a4a] border border-[#5a5a5a] rounded-lg p-6">
-              <h3 className="text-white font-bold mb-4">Transparency</h3>
-              <ul className="space-y-2 text-gray-300 text-sm">
-                <li className="flex items-start gap-2">
-                  <span className="text-green-400 mt-1">✓</span>
-                  <span>Explainable rankings</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-green-400 mt-1">✓</span>
-                  <span>Plain language explanations</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-green-400 mt-1">✓</span>
-                  <span>Skill gap identification</span>
-                </li>
-              </ul>
+        <section style={bottomGrid}>
+          <div style={infoCard}>
+            <p style={sectionLabel}>Why it matters</p>
+            <h2 style={sectionTitle}>Explainable hiring support</h2>
+
+            <div style={checkList}>
+              {[
+                "Section-level scoring for skills, experience, education, projects, and certifications.",
+                "Strengths and gaps are shown in recruiter-friendly language.",
+                "Interview questions help verify candidate fit during human review.",
+              ].map((text) => (
+                <div key={text} style={checkItem}>
+                  <CheckCircle2 size={18} color="#34d399" />
+                  <span>{text}</span>
+                </div>
+              ))}
             </div>
           </div>
-        </div>
 
-        {/* Footer */}
-        <div className="text-center text-gray-500 text-sm border-t border-[#4a4a4a] pt-8 [&>p:first-child]:hidden">
-          <p>Professional UX Wireframe Sketch • Milestone 1 Deliverable</p>
-          <p>AI Resume Screening and Interview Assistant • Milestone 2 Deliverable</p>
-          <p className="mt-2">Click any screen above to view the interactive wireframe</p>
-        </div>
+          <div style={noticeCard}>
+            <p style={sectionLabel}>Ethical Design</p>
+            <h2 style={sectionTitle}>Human remains in control</h2>
+            <p style={cardText}>
+              This system is designed as decision support only. It does not
+              automatically reject candidates, and recruiters remain responsible
+              for final hiring decisions.
+            </p>
+          </div>
+        </section>
       </div>
     </div>
   );
 }
+
+/* ---------- styles ---------- */
+
+const pageStyle = {
+  minHeight: "100vh",
+  background: "radial-gradient(circle at top, #10203a 0%, #071426 38%, #020617 100%)",
+  padding: "42px",
+  color: "#fff",
+};
+
+const heroStyle = {
+  textAlign: "center" as const,
+  padding: "34px 0 44px",
+};
+
+const pill = {
+  display: "inline-block",
+  padding: "8px 14px",
+  borderRadius: "999px",
+  background: "rgba(96,165,250,0.12)",
+  border: "1px solid rgba(96,165,250,0.25)",
+  color: "#bfdbfe",
+  fontSize: "12px",
+  fontWeight: 700,
+  letterSpacing: "0.7px",
+  marginBottom: "18px",
+};
+
+const mainTitle = {
+  margin: 0,
+  fontSize: "46px",
+  fontWeight: 900,
+  letterSpacing: "-0.8px",
+};
+
+const heroText = {
+  maxWidth: "720px",
+  margin: "16px auto 0",
+  color: "#94a3b8",
+  fontSize: "16px",
+  lineHeight: 1.6,
+};
+
+const heroButtons = {
+  marginTop: "26px",
+  display: "flex",
+  justifyContent: "center",
+  gap: "14px",
+};
+
+const primaryButton = {
+  padding: "13px 18px",
+  borderRadius: "12px",
+  background: "rgba(16,185,129,0.18)",
+  border: "1px solid rgba(16,185,129,0.32)",
+  color: "#a7f3d0",
+  fontWeight: 800,
+  cursor: "pointer",
+  display: "flex",
+  alignItems: "center",
+  gap: "8px",
+};
+
+const secondaryButton = {
+  padding: "13px 18px",
+  borderRadius: "12px",
+  background: "rgba(255,255,255,0.06)",
+  border: "1px solid rgba(255,255,255,0.1)",
+  color: "#e5e7eb",
+  fontWeight: 700,
+  cursor: "pointer",
+};
+
+const actionGrid = {
+  display: "grid",
+  gridTemplateColumns: "repeat(4, 1fr)",
+  gap: "18px",
+  marginBottom: "24px",
+};
+
+const actionCard = {
+  cursor: "pointer",
+  padding: "24px",
+  borderRadius: "18px",
+  background: "linear-gradient(145deg, #0b1220, #0f1e3a)",
+  border: "1px solid rgba(255,255,255,0.06)",
+  boxShadow: "0 18px 36px rgba(0,0,0,0.38)",
+  transition: "all 0.25s ease",
+  minHeight: "160px",
+};
+
+const iconBox = {
+  width: "48px",
+  height: "48px",
+  borderRadius: "14px",
+  background: "rgba(96,165,250,0.12)",
+  border: "1px solid rgba(96,165,250,0.22)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  marginBottom: "16px",
+};
+
+const cardTitle = {
+  margin: 0,
+  fontSize: "16px",
+  fontWeight: 800,
+};
+
+const cardText = {
+  marginTop: "10px",
+  color: "#94a3b8",
+  fontSize: "13px",
+  lineHeight: 1.55,
+};
+
+const workflowPanel = {
+  borderRadius: "20px",
+  padding: "26px",
+  background: "linear-gradient(145deg, #0b1220, #0f1e3a)",
+  border: "1px solid rgba(255,255,255,0.06)",
+  boxShadow: "0 18px 36px rgba(0,0,0,0.38)",
+  marginBottom: "24px",
+};
+
+const sectionHeader = {
+  display: "flex",
+  justifyContent: "space-between",
+  gap: "24px",
+  marginBottom: "22px",
+};
+
+const sectionLabel = {
+  margin: 0,
+  color: "#60a5fa",
+  fontSize: "12px",
+  textTransform: "uppercase" as const,
+  letterSpacing: "1px",
+  fontWeight: 800,
+};
+
+const sectionTitle = {
+  margin: "6px 0 0",
+  fontSize: "22px",
+  fontWeight: 850,
+};
+
+const sectionDesc = {
+  maxWidth: "420px",
+  color: "#94a3b8",
+  fontSize: "13px",
+  lineHeight: 1.5,
+};
+
+const workflowGrid = {
+  display: "grid",
+  gridTemplateColumns: "repeat(4, 1fr)",
+  gap: "14px",
+};
+
+const workflowCard = {
+  position: "relative" as const,
+  padding: "18px",
+  borderRadius: "16px",
+  background: "rgba(255,255,255,0.04)",
+  border: "1px solid rgba(255,255,255,0.06)",
+};
+
+const workflowIcon = {
+  width: "42px",
+  height: "42px",
+  borderRadius: "13px",
+  background: "rgba(16,185,129,0.12)",
+  border: "1px solid rgba(16,185,129,0.22)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  marginBottom: "14px",
+};
+
+const stepNumber = {
+  position: "absolute" as const,
+  top: "18px",
+  right: "18px",
+  color: "#334155",
+  fontWeight: 900,
+};
+
+const workflowTitle = {
+  margin: 0,
+  fontSize: "16px",
+  fontWeight: 800,
+};
+
+const workflowText = {
+  marginTop: "8px",
+  color: "#94a3b8",
+  fontSize: "13px",
+  lineHeight: 1.5,
+};
+
+const bottomGrid = {
+  display: "grid",
+  gridTemplateColumns: "1.4fr 1fr",
+  gap: "20px",
+};
+
+const infoCard = {
+  borderRadius: "20px",
+  padding: "26px",
+  background: "linear-gradient(145deg, #0b1220, #0f1e3a)",
+  border: "1px solid rgba(255,255,255,0.06)",
+  boxShadow: "0 18px 36px rgba(0,0,0,0.38)",
+};
+
+const noticeCard = {
+  borderRadius: "20px",
+  padding: "26px",
+  background: "rgba(16,185,129,0.08)",
+  border: "1px solid rgba(16,185,129,0.18)",
+  boxShadow: "0 18px 36px rgba(0,0,0,0.32)",
+};
+
+const checkList = {
+  display: "flex",
+  flexDirection: "column" as const,
+  gap: "12px",
+  marginTop: "20px",
+};
+
+const checkItem = {
+  display: "flex",
+  alignItems: "flex-start",
+  gap: "10px",
+  color: "#cbd5e1",
+  fontSize: "14px",
+  lineHeight: 1.5,
+};
