@@ -4,7 +4,6 @@ import { JobUpload } from "./components/JobUpload";
 import { CandidateRanking } from "./components/CandidateRanking";
 import { CandidateDetail } from "./components/CandidateDetail";
 import { InterviewQuestions } from "./components/InterviewQuestions";
-import { AllScreens } from "./components/AllScreens";
 
 export const router = createBrowserRouter([
   {
@@ -35,8 +34,5 @@ export const router = createBrowserRouter([
     path: "/interview/:id",
     Component: InterviewQuestions,
   },
-  {
-    path: "/all-screens",
-    Component: AllScreens,
-  },
+  
 ]);
