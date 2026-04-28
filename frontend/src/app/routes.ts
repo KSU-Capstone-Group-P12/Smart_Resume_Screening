@@ -1,10 +1,9 @@
 import { createBrowserRouter } from "react-router";
 import { WireframeOverview } from "./components/WireframeOverview";
 import { JobUpload } from "./components/JobUpload";
-import { Processing } from "./components/Processing";
 import { CandidateRanking } from "./components/CandidateRanking";
 import { CandidateDetail } from "./components/CandidateDetail";
-import { InterviewQuestionsGenerated } from "./components/InterviewQuestionsGenerated";
+import { InterviewQuestions } from "./components/InterviewQuestions";
 import { AllScreens } from "./components/AllScreens";
 
 export const router = createBrowserRouter([
@@ -25,10 +24,6 @@ export const router = createBrowserRouter([
     Component: JobUpload,
   },
   {
-    path: "/processing",
-    Component: Processing,
-  },
-  {
     path: "/ranking",
     Component: CandidateRanking,
   },
@@ -38,7 +33,7 @@ export const router = createBrowserRouter([
   },
   {
     path: "/interview/:id",
-    Component: InterviewQuestionsGenerated,
+    Component: InterviewQuestions,
   },
   {
     path: "/all-screens",
