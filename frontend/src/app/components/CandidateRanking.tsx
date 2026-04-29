@@ -95,7 +95,11 @@ export function CandidateRanking() {
               style={selectStyle}
             >
               {jobs.map((job) => (
-                <option key={job.id} value={job.id}>
+                <option
+                  key={job.id}
+                  value={job.id}
+                  style={{ backgroundColor: "#0f172a", color: "#ffffff" }}
+                >
                   {job.title}
                 </option>
               ))}
