@@ -62,7 +62,7 @@ flowchart TD
 |---|---|
 | Frontend | React, JavaScript |
 | Backend | Python, API Services |
-| Generative AI | LLaMA 3.1 8B (planned primary model) | Gemini 3.8 Flash |
+| Generative AI | LLaMA 3.1 8B (planned primary model) & Gemini 3.8 Flash |
 | Semantic Analysis | Sentence Transformers |
 | Database | MongoDB |
 | Model Deployment Strategy | Hugging Face API |
