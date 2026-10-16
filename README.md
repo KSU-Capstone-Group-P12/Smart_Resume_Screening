@@ -1,189 +1,140 @@
-🧠 Smart Resume Screening & Interview Preparation Assistant
 
-Capstone Project | Kennesaw State University | Group P12
+# 🧠 Smart Resume Screening & Interview Preparation Assistant
 
-An AI-powered decision-support system designed to improve consistency, transparency, and structure in early-stage candidate evaluation.
+### AI-Powered Candidate Evaluation | Semantic Matching | Explainable Decision Support
 
-This repository contains the full lifecycle of the project across all milestones, including planning, architecture, implementation, testing, and final delivery.
+**Kennesaw State University | MSIT Capstone Project | Group P12**
 
-🚀 Project Overview
+An AI-powered recruitment decision-support prototype designed to streamline resume evaluation, identify candidate-job alignment, and generate tailored interview questions using natural language processing (NLP), semantic embeddings, and generative AI.
 
-The Smart Resume Screening & Interview Preparation Assistant is a web-based system that enables recruiters to:
+**Our approach:** Go beyond keyword matching to support more contextual, transparent, and structured candidate evaluation—while keeping human judgment central to hiring decisions.
 
-Upload resumes (PDF, DOCX)
+---
 
-Input job descriptions
+## 🚀 Project Overview
 
-Perform semantic (embedding-based) candidate evaluation
+Recruiters often face challenges evaluating resumes with inconsistent formatting, varied terminology, and complex candidate backgrounds. Traditional keyword-based screening may overlook relevant qualifications expressed differently.
 
-Rank candidates across:
+This project explores an intelligent screening solution that combines **semantic AI analysis, structured scoring, and explainable insights** to support early-stage recruitment.
 
-Skills
+### Key Capabilities
 
-Experience
+- **Resume Processing:** Ingest PDF/DOCX resumes and extract structured candidate information.
+- **Semantic Matching:** Use Sentence Transformer embeddings to assess contextual alignment with job requirements.
+- **Candidate Ranking:** Evaluate applicants across skills, experience, education, and projects using configurable scoring weights.
+- **Explainable AI:** Generate interpretable insights highlighting qualifications and potential gaps.
+- **Interview Preparation:** Generate candidate-specific interview questions using LLMs.
+- **Recruiter Dashboard:** Provide a centralized interface for reviewing candidate evaluations.
 
-Education
+*Capabilities reflect the documented solution scope; implementation and testing maturity may vary by component.*
 
-Projects
+---
 
-Generate:
+## 🏗️ System Architecture
 
-Explainable ranking insights
+The system follows a modular, layered architecture that separates AI processing from deterministic business logic.
 
-Tailored interview questions
+```mermaid
+flowchart TD
+    A["React Recruiter Dashboard"] --> B["Python API / Backend"]
+    B --> C["Resume Parsing & Data Extraction"]
+    C --> D["LLM & Semantic Embedding Layer"]
+    D --> E["Structured Candidate Data"]
+    E --> F["Weighted Scoring & Ranking"]
+    F --> G["Explainable Insights & Interview Questions"]
+    G --> A
+    B <--> H[("MongoDB")]
+```
 
-Unlike traditional systems, this solution uses semantic similarity instead of keyword matching, improving alignment and fairness.
+### Architecture Highlights
 
-Based on Milestone 1 planning and system design
+- **Modularity:** Separates frontend, backend, AI services, and data persistence.
+- **Explainability:** Combines structured scoring with AI-generated evaluation insights.
+- **Flexibility:** Supports configurable scoring and potential model replacement.
+- **Scalability:** Designed with asynchronous processing and incremental performance testing in mind.
+- **Human Oversight:** Provides decision support without automated candidate rejection.
 
+---
 
-🧩 Capstone Scope (All Milestones)
+## ⚙️ Technology Stack
 
-This repository tracks the entire capstone progression, not just the final product.
+| Layer | Technology |
+|---|---|
+| Frontend | React, JavaScript |
+| Backend | Python, API Services |
+| Generative AI | LLaMA 3.1 8B (planned primary model) |
+| Semantic Analysis | Sentence Transformers |
+| Database | MongoDB |
+| Model Deployment Strategy | Hugging Face API |
+| Local Model Fallback | LLaMA 3.2 3B (proposed) |
+| Collaboration | Git, GitHub |
 
-✅ Milestone 1 — Planning & Design (Completed)
+---
 
-Functional and non-functional requirements
+## 📋 Project Lifecycle & Deliverables
 
-UX wireframes and recruiter dashboard design
+This repository documents the capstone lifecycle from initial planning through development, testing, and delivery.
 
-System architecture and data model
+| Phase | Scope |
+|---|---|
+| **1. Planning & Design** | Requirements analysis, UX wireframes, system architecture, technology selection, and Gantt chart |
+| **2. Core Development** | Resume parsing, semantic matching, candidate scoring, interview generation, and application integration |
+| **3. Testing & Refinement** | Functional testing, bias assessment, explainability validation, performance evaluation, and UI improvements |
+| **4. Final Delivery** | Technical documentation, demonstrations, final reporting, and project submission |
 
-Tech stack selection
+Project milestones, architecture decisions, and supporting documentation are available in the repository.
 
-GitHub repository setup
+### Repository Structure
 
-Gantt chart creation
+```text
+Smart_Resume_Screening/
+├── frontend/              # React application
+├── backend/               # Python backend services
+├── ProjectReportsFiles/   # Reports and project documentation
+└── README.md
+```
 
-🔄 Milestone 2 — Core Development (In Progress)
+---
 
-Resume ingestion and parsing pipeline
+## 🛡️ Responsible AI & Design Considerations
 
-Semantic matching (embeddings)
+The platform is designed as a **human-in-the-loop decision-support system**, not an autonomous hiring solution.
 
-Candidate ranking algorithm
+Key principles include:
 
-Interview question generation
+- Human oversight of candidate evaluation and hiring decisions.
+- No automatic candidate rejection.
+- Exclusion of protected demographic characteristics from intended scoring inputs.
+- Transparent scoring categories and interpretable results.
+- Continued evaluation of bias, accuracy, privacy, and reliability.
 
-End-to-end system integration
+Semantic similarity does not inherently eliminate bias. Additional validation would be necessary before real-world deployment.
 
-Mid-semester demonstration
+---
 
-⚙️ Execution Phase (Testing & Refinement)
+## 🔮 Future Enhancements
 
-Bias mitigation testing
+- Integration with enterprise Applicant Tracking Systems (ATS).
+- Advanced fairness auditing and model evaluation.
+- Expanded recruiter analytics and scoring customization.
+- Optimized batch processing and model inference.
+- Enhanced security, privacy, and deployment capabilities.
 
-Explainability validation
+---
 
-Performance optimization
+## 🎓 Academic Project & Team Collaboration
 
-UI refinement
+**Institution:** Kennesaw State University  
+**Program:** Master of Science in Information Technology  
+**Project Team:** Group P12
 
-🎯 Final Phase (Delivery) and Milestone 2
+This collaborative capstone demonstrates the application of **AI/ML, systems architecture, business analysis, full-stack development, and technical project delivery** to a real-world business challenge.
 
-Final documentation
+### Project Takeaway
 
-Repository cleanup
+> **Effective AI solutions require more than intelligent models. They require thoughtful architecture, reliable integration, transparent business logic, and measurable value.**
 
-Final demonstration and submission
+---
 
-Timeline and task ownership are defined in the Gantt Chart
+**Disclaimer:** This project is an academic prototype developed for research and demonstration purposes. It is not a validated production hiring system and does not replace human decision-making.
 
-
-🏗 System Architecture
-
-The system follows a modular, layered architecture:
-
-Frontend (React): User interaction and recruiter dashboard
-
-Backend (Python API): Processing and orchestration
-
-LLM Layer: Resume parsing, semantic analysis, explanations, and interview generation
-
-Business Logic Layer: Deterministic ranking and scoring
-
-Database (MongoDB): Structured candidate data storage
-
-This design ensures scalability, modularity, and clear separation of concerns.
-
-🧠 Key Features
-
-AI-driven resume parsing into structured JSON
-
-Embedding-based semantic similarity (not keyword matching)
-
-Category-level scoring (skills, experience, education, projects)
-
-Configurable weighted ranking system
-
-Explainable AI outputs
-
-Interview question generation
-
-Recruiter dashboard interface
-
-Modular and scalable architecture
-
-⚙️ Tech Stack
-
-Frontend
-
-React
-
-Backend
-
-Python (API and business logic)
-
-AI / ML
-
-LLaMA 3.1 8B (primary LLM)
-
-Sentence Transformers (semantic embeddings)
-
-Database
-
-MongoDB
-
-Deployment Strategy
-
-Hugging Face API (primary)
-
-Local model fallback (LLaMA 3.2 3B if needed)
-
-📈 Scalability & Design Considerations
-
-Asynchronous processing for handling multiple resumes
-
-Modular components for model replacement
-
-Separation of AI outputs from deterministic ranking logic
-
-Designed for incremental scaling and testing
-
-Initial testing begins with small batches and scales to identify performance thresholds.
-
-⚠️ Assumptions and Constraints
-
-The system is a decision-support tool, not an automated hiring system
-
-No candidates are automatically rejected or filtered out
-
-Protected demographic attributes are not used or inferred
-
-Operates within academic prototype constraints
-
-🔮 Future Enhancements
-
-Expanded evaluation metrics and scoring customization
-
-Improved UI/UX for recruiter workflows
-
-Integration with external HR systems
-
-Advanced bias detection and fairness auditing
-
-Real-time processing optimization
-
-📌 Disclaimer
-
-This system is intended for academic and demonstration purposes. It is not designed to replace human decision-making in hiring processes.
